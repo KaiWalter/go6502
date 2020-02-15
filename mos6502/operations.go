@@ -97,6 +97,9 @@ func BEQ() int {
 
 	if GetFlag(Z) {
 		cycles++
+		if relativeAddress == 0xFFFD {
+			cycles += 0
+		}
 		absoluteAddress = PC + relativeAddress
 
 		if (absoluteAddress & 0xFF00) != (PC & 0xFF00) {
@@ -506,14 +509,17 @@ func SBC() int {
 }
 
 func SEC() int {
+	SetFlag(C, true)
 	return 0
 }
 
 func SED() int {
+	SetFlag(D, true)
 	return 0
 }
 
 func SEI() int {
+	SetFlag(I, true)
 	return 0
 }
 
@@ -523,34 +529,52 @@ func STA() int {
 }
 
 func STX() int {
+	write(absoluteAddress, X)
 	return 0
 }
 
 func STY() int {
+	write(absoluteAddress, Y)
 	return 0
 }
 
 func TAX() int {
+	X = A
+	SetFlag(Z, X == 0x00)
+	SetFlag(N, X&0x80 != 0)
 	return 0
 }
 
 func TAY() int {
+	X = Y
+	SetFlag(Z, Y == 0x00)
+	SetFlag(N, Y&0x80 != 0)
 	return 0
 }
 
 func TSX() int {
+	X = SP
+	SetFlag(Z, X == 0x00)
+	SetFlag(N, X&0x80 != 0)
 	return 0
 }
 
 func TXA() int {
+	A = X
+	SetFlag(Z, A == 0x00)
+	SetFlag(N, A&0x80 != 0)
 	return 0
 }
 
 func TXS() int {
+	SP = X
 	return 0
 }
 
 func TYA() int {
+	A = Y
+	SetFlag(Z, A == 0x00)
+	SetFlag(N, A&0x80 != 0)
 	return 0
 }
 

@@ -43,7 +43,7 @@ func TestFunctional(t *testing.T) {
 		}
 
 		if newInstruction {
-			fmt.Printf("%x %s\n", currentPC, opDef.memnonic)
+			fmt.Printf("%x %x %s %x%x\n", currentPC, prevPC, opDef.memnonic, ram[0x4e5], ram[0x4e6])
 			newInstruction = false
 		}
 

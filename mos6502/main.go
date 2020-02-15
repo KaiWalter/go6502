@@ -107,6 +107,10 @@ func Reset() {
 	remainingCycles = 7
 	PC = 0
 	SP = 0xFD
+	Status = 0x00 | U
+	fetched = 0
+	relativeAddress = 0
+	absoluteAddress = 0
 }
 
 func CyclesCompleted() bool {
@@ -116,7 +120,7 @@ func CyclesCompleted() bool {
 // Run executes one process cycle
 func Cycle() error {
 
-	if remainingCycles == 0 {
+	if remainingCycles <= 0 {
 		currentPC = PC
 
 		opCode = read(PC)
