@@ -429,18 +429,55 @@ func PLP() int {
 }
 
 func ROL() int {
+	fetch()
+	temp := (uint16(fetched) << 1) | GetFlagN(C)
+	SetFlag(C, temp&0xFF00 != 0)
+	SetFlag(Z, (temp&0x00FF) == 0x0000)
+	SetFlag(N, temp&0x0080 != 0)
+	if opAddressMode == amIMP {
+		A = uint8(temp & 0x00FF)
+
+	} else {
+		write(absoluteAddress, uint8(temp&0x00FF))
+	}
 	return 0
 }
 
 func ROR() int {
+	fetch()
+	temp := (GetFlagN(C) << 7) | (uint16(fetched) >> 1)
+	SetFlag(C, temp&0x01 != 0)
+	SetFlag(Z, (temp&0x00FF) == 0x0000)
+	SetFlag(N, temp&0x0080 != 0)
+	if opAddressMode == amIMP {
+		A = uint8(temp & 0x00FF)
+
+	} else {
+		write(absoluteAddress, uint8(temp&0x00FF))
+	}
 	return 0
 }
 
 func RTI() int {
+	SP++
+	Status = read(absoluteSP())
+	Status &= ^B
+	Status &= ^U
+
+	SP++
+	PC = uint16(read(absoluteSP()))
+	SP++
+	PC |= uint16(read(absoluteSP())) << 8
 	return 0
 }
 
 func RTS() int {
+	SP++
+	PC = uint16(read(absoluteSP()))
+	SP++
+	PC |= uint16(read(absoluteSP())) << 8
+
+	PC++
 	return 0
 }
 
