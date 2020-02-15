@@ -57,6 +57,9 @@ var (
 	// PC = ProgramCounter
 	PC uint16
 
+	// starting PC of current instruction
+	currentPC uint16
+
 	// remainingCycles
 	remainingCycles int
 
@@ -110,6 +113,8 @@ func CyclesCompleted() bool {
 func Cycle() error {
 
 	if remainingCycles == 0 {
+		currentPC = PC
+
 		opCode := int(read(PC))
 
 		if opCode > len(operations) {

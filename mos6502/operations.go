@@ -21,7 +21,20 @@ func BCS() int {
 }
 
 func BEQ() int {
-	return 0
+	cycles := 0
+
+	if GetFlag(Z) {
+		cycles++
+		absoluteAddress = PC + relativeAddress
+
+		if (absoluteAddress & 0xFF00) != (PC & 0xFF00) {
+			cycles++
+		}
+
+		PC = absoluteAddress
+	}
+
+	return cycles
 }
 
 func BIT() int {
@@ -33,10 +46,37 @@ func BMI() int {
 }
 
 func BNE() int {
-	return 0
+	cycles := 0
+
+	if !GetFlag(Z) {
+		cycles++
+		absoluteAddress = PC + relativeAddress
+
+		if (absoluteAddress & 0xFF00) != (PC & 0xFF00) {
+			cycles++
+		}
+
+		PC = absoluteAddress
+	}
+
+	return cycles
 }
 
 func BPL() int {
+	cycles := 0
+
+	if !GetFlag(N) {
+		cycles++
+		absoluteAddress = PC + relativeAddress
+
+		if (absoluteAddress & 0xFF00) != (PC & 0xFF00) {
+			cycles++
+		}
+
+		PC = absoluteAddress
+	}
+
+	return cycles
 	return 0
 }
 
@@ -109,6 +149,7 @@ func INY() int {
 }
 
 func JMP() int {
+	PC = absoluteAddress
 	return 0
 }
 
