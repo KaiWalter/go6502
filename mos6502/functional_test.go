@@ -31,11 +31,14 @@ func TestFunctional(t *testing.T) {
 	WaitForSystemResetCycles()
 	PC = 0x400
 
-	prevPC := PC
+	prevPC := uint16(0xFFFF)
 	newInstruction := true
 
 	// act
 	for int(PC) != endOfMain {
+		if PC == 0x0cc1 {
+			PC = 0x0cc1
+		}
 		err := Cycle()
 		if err != nil {
 			t.Errorf("CPU processing failed %v", err)
@@ -43,17 +46,17 @@ func TestFunctional(t *testing.T) {
 		}
 
 		if newInstruction {
-			fmt.Printf("%x %x %s %x%x\n", currentPC, prevPC, opDef.memnonic, ram[0x4e5], ram[0x4e6])
+			if currentPC == prevPC {
+				t.Errorf("functional test loops on %x", PC)
+				break
+			}
+			prevPC = currentPC
+			fmt.Printf("%x %x %s\n", currentPC, prevPC, opDef.memnonic)
 			newInstruction = false
 		}
 
 		if CyclesCompleted() {
-			if PC == prevPC {
-				t.Errorf("functional test loops on %x", PC)
-				break
-			}
 			newInstruction = true
-			prevPC = currentPC
 		}
 	}
 

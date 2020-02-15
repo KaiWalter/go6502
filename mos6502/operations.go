@@ -97,9 +97,6 @@ func BEQ() int {
 
 	if GetFlag(Z) {
 		cycles++
-		if relativeAddress == 0xFFFD {
-			cycles += 0
-		}
 		absoluteAddress = PC + relativeAddress
 
 		if (absoluteAddress & 0xFF00) != (PC & 0xFF00) {
