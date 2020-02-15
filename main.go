@@ -17,7 +17,8 @@ func main() {
 		log.Fatalf("could not retrieve ROM: %v", err)
 	}
 
-	fmt.Printf("%x\n", ram[0x400])
+	mos6502.Init(readMem, writeMem)
 
-	fmt.Printf("%x\n", mos6502.TryCallback(readMem, writeMem))
+	mos6502.Run()
+
 }
