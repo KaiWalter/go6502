@@ -1,172 +1,234 @@
 package mos6502
 
-func ADC() {
+func ADC() int {
+	return 0
 }
 
-func AND() {
+func AND() int {
+	return 0
 }
 
-func ASL() {
+func ASL() int {
+	return 0
 }
 
-func BCC() {
+func BCC() int {
+	return 0
 }
 
-func BCS() {
+func BCS() int {
+	return 0
 }
 
-func BEQ() {
+func BEQ() int {
+	return 0
 }
 
-func BIT() {
+func BIT() int {
+	return 0
 }
 
-func BMI() {
+func BMI() int {
+	return 0
 }
 
-func BNE() {
+func BNE() int {
+	return 0
 }
 
-func BPL() {
+func BPL() int {
+	return 0
 }
 
-func BRK() {
+func BRK() int {
+	return 0
 }
 
-func BVC() {
+func BVC() int {
+	return 0
 }
 
-func BVS() {
+func BVS() int {
+	return 0
 }
 
-func CLC() {
+func CLC() int {
+	return 0
 }
 
-func CLD() {
+func CLD() int {
+	return 0
 }
 
-func CLI() {
+func CLI() int {
+	return 0
 }
 
-func CLV() {
+func CLV() int {
+	return 0
 }
 
-func CMP() {
+func CMP() int {
+	return 0
 }
 
-func CPX() {
+func CPX() int {
+	return 0
 }
 
-func CPY() {
+func CPY() int {
+	return 0
 }
 
-func DEC() {
+func DEC() int {
+	return 0
 }
 
-func DEX() {
+func DEX() int {
+	return 0
 }
 
-func DEY() {
+func DEY() int {
+	return 0
 }
 
-func EOR() {
+func EOR() int {
+	return 0
 }
 
-func INC() {
+func INC() int {
+	return 0
 }
 
-func INX() {
+func INX() int {
+	return 0
 }
 
-func INY() {
+func INY() int {
+	return 0
 }
 
-func JMP() {
+func JMP() int {
+	return 0
 }
 
-func JSR() {
+func JSR() int {
+	return 0
 }
 
-func LDA() {
+func LDA() int {
+	fetch()
+	A = fetched
+	SetFlag(Z, A == 0x00)
+	SetFlag(N, A&0x80 != 0)
+	return 0
 }
 
-func LDX() {
+func LDX() int {
+	return 0
 }
 
-func LDY() {
+func LDY() int {
+	return 0
 }
 
-func LSR() {
+func LSR() int {
+	return 0
 }
 
-func NOP() {
+func NOP() int {
+	return 0
 }
 
-func ORA() {
+func ORA() int {
+	return 0
 }
 
-func PHA() {
+func PHA() int {
+	return 0
 }
 
-func PHP() {
+func PHP() int {
+	return 0
 }
 
-func PLA() {
+func PLA() int {
+	return 0
 }
 
-func PLP() {
+func PLP() int {
+	return 0
 }
 
-func ROL() {
+func ROL() int {
+	return 0
 }
 
-func ROR() {
+func ROR() int {
+	return 0
 }
 
-func RTI() {
+func RTI() int {
+	return 0
 }
 
-func RTS() {
+func RTS() int {
+	return 0
 }
 
-func SBC() {
+func SBC() int {
+	return 0
 }
 
-func SEC() {
+func SEC() int {
+	return 0
 }
 
-func SED() {
+func SED() int {
+	return 0
 }
 
-func SEI() {
+func SEI() int {
+	return 0
 }
 
-func STA() {
+func STA() int {
+	write(absoluteAddress, A)
+	return 0
 }
 
-func STX() {
+func STX() int {
+	return 0
 }
 
-func STY() {
+func STY() int {
+	return 0
 }
 
-func TAX() {
+func TAX() int {
+	return 0
 }
 
-func TAY() {
+func TAY() int {
+	return 0
 }
 
-func TSX() {
+func TSX() int {
+	return 0
 }
 
-func TXA() {
+func TXA() int {
+	return 0
 }
 
-func TXS() {
+func TXS() int {
+	return 0
 }
 
-func TYA() {
+func TYA() int {
+	return 0
 }
 
-func XXX() {
+func XXX() int {
+	return 0
 }

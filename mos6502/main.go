@@ -1,12 +1,16 @@
 package mos6502
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+	"runtime"
+)
 
 // adressModeFunc defines a function executing the adress mode of an operation
 type adressModeFunc func() int
 
 // operationFunc defines a function executing an operation
-type operationFunc func()
+type operationFunc func() int
 
 type operationDefinition struct {
 	memnonic   string
@@ -47,8 +51,14 @@ var (
 	// write points to a function where the CPU can write to RAM or Bus
 	write WriteFunc
 
+	// definition of current operation
+	opDef operationDefinition
+
 	// PC = ProgramCounter
 	PC uint16
+
+	// remainingCycles
+	remainingCycles int
 
 	// SP = Stack Pointer
 	SP uint8
@@ -66,7 +76,7 @@ var (
 	Y uint8
 
 	// address to fetch next value from
-	fetchAddress uint16
+	absoluteAddress uint16
 
 	// relative address for branch
 	relativeAddress uint16
@@ -81,28 +91,53 @@ func Init(rf ReadFunc, wf WriteFunc) error {
 	read = rf
 	write = wf
 
-	PC = 0
-	SP = 0xFD
+	Reset()
 
 	return nil
 }
 
+func Reset() {
+	remainingCycles = 7
+	PC = 0
+	SP = 0xFD
+}
+
+func CyclesCompleted() bool {
+	return remainingCycles == 0
+}
+
 // Run executes one process cycle
-func Run() error {
+func Cycle() error {
 
-	opCode := int(read(PC))
+	if remainingCycles == 0 {
+		opCode := int(read(PC))
 
-	if opCode > len(operations) {
-		return fmt.Errorf("unknown operation: %x", opCode)
+		if opCode > len(operations) {
+			return fmt.Errorf("unknown operation: %x", opCode)
+		}
+
+		PC++
+
+		opDef = operations[opCode]
+
+		remainingCycles = opDef.cycles
+
+		remainingCycles += opDef.adressMode()
+
+		remainingCycles += opDef.operation()
 	}
 
-	opDef := operations[opCode]
-
-	cycles := opDef.cycles
-
-	cycles += opDef.adressMode()
-
-	opDef.operation()
+	remainingCycles--
 
 	return nil
+}
+
+func fetch() uint8 {
+	opAddressMode := runtime.FuncForPC(reflect.ValueOf(opDef.adressMode).Pointer()).Name()
+	impAdressMode := runtime.FuncForPC(reflect.ValueOf(IMP).Pointer()).Name()
+
+	if opAddressMode != impAdressMode {
+		fetched = read(absoluteAddress)
+	}
+	return fetched
 }

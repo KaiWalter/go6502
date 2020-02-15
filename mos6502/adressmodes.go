@@ -5,7 +5,7 @@ func ABS() int {
 	PC++
 	hi := uint16(read(PC))
 	PC++
-	fetchAddress = hi<<8 | lo
+	absoluteAddress = hi<<8 | lo
 	return 0
 }
 
@@ -14,10 +14,10 @@ func ABX() int {
 	PC++
 	hi := uint16(read(PC))
 	PC++
-	fetchAddress = hi<<8 | lo
-	fetchAddress += uint16(X)
+	absoluteAddress = hi<<8 | lo
+	absoluteAddress += uint16(X)
 
-	if (fetchAddress & 0xFF00) != (hi << 8) {
+	if (absoluteAddress & 0xFF00) != (hi << 8) {
 		return 1
 	}
 
@@ -29,10 +29,10 @@ func ABY() int {
 	PC++
 	hi := uint16(read(PC))
 	PC++
-	fetchAddress = hi<<8 | lo
-	fetchAddress += uint16(Y)
+	absoluteAddress = hi<<8 | lo
+	absoluteAddress += uint16(Y)
 
-	if (fetchAddress & 0xFF00) != (hi << 8) {
+	if (absoluteAddress & 0xFF00) != (hi << 8) {
 		return 1
 	}
 
@@ -40,7 +40,7 @@ func ABY() int {
 }
 
 func IMM() int {
-	fetchAddress = PC
+	absoluteAddress = PC
 	PC++
 	return 0
 }
@@ -53,9 +53,9 @@ func IND() int {
 	pointer := pointerHi<<8 | pointerLo
 
 	if pointerLo == 0x00FF {
-		fetchAddress = (uint16(read(pointer&0xFF00)) << 8) | uint16(read(pointer+0))
+		absoluteAddress = (uint16(read(pointer&0xFF00)) << 8) | uint16(read(pointer+0))
 	} else {
-		fetchAddress = (uint16(read(pointer+1)) << 8) | uint16(read(pointer+0))
+		absoluteAddress = (uint16(read(pointer+1)) << 8) | uint16(read(pointer+0))
 	}
 	return 0
 }
@@ -72,7 +72,7 @@ func IZX() int {
 	lo := uint16(read((tempAddress + uint16(X)) & 0x00FF))
 	hi := uint16(read((tempAddress + uint16(X) + 1) & 0x00FF))
 
-	fetchAddress = hi<<8 | lo
+	absoluteAddress = hi<<8 | lo
 
 	return 0
 }
@@ -84,7 +84,7 @@ func IZY() int {
 	lo := uint16(read((tempAddress + uint16(Y)) & 0x00FF))
 	hi := uint16(read((tempAddress + uint16(Y) + 1) & 0x00FF))
 
-	fetchAddress = hi<<8 | lo
+	absoluteAddress = hi<<8 | lo
 
 	return 0
 }
@@ -99,22 +99,22 @@ func REL() int {
 }
 
 func ZP0() int {
-	fetchAddress = uint16(read(PC))
+	absoluteAddress = uint16(read(PC))
 	PC++
-	fetchAddress &= 0x00FF
+	absoluteAddress &= 0x00FF
 	return 0
 }
 
 func ZPX() int {
-	fetchAddress = uint16(read(PC)) + uint16(X)
+	absoluteAddress = uint16(read(PC)) + uint16(X)
 	PC++
-	fetchAddress &= 0x00FF
+	absoluteAddress &= 0x00FF
 	return 0
 }
 
 func ZPY() int {
-	fetchAddress = uint16(read(PC)) + uint16(Y)
+	absoluteAddress = uint16(read(PC)) + uint16(Y)
 	PC++
-	fetchAddress &= 0x00FF
+	absoluteAddress &= 0x00FF
 	return 0
 }

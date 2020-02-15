@@ -21,3 +21,8 @@ func SetFlag(flag uint8, value bool) {
 		Status &= reverse
 	}
 }
+
+// GetFlag get a flag from the Status Register
+func GetFlag(flag uint8) bool {
+	return (Status & flag) != 0
+}
