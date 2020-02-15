@@ -133,11 +133,14 @@ func Cycle() error {
 }
 
 func fetch() uint8 {
+
+	// not sure whether this is the best way to compare function pointers...
 	opAddressMode := runtime.FuncForPC(reflect.ValueOf(opDef.adressMode).Pointer()).Name()
 	impAdressMode := runtime.FuncForPC(reflect.ValueOf(IMP).Pointer()).Name()
 
 	if opAddressMode != impAdressMode {
 		fetched = read(absoluteAddress)
 	}
+
 	return fetched
 }
