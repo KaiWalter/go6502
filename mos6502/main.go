@@ -2,8 +2,6 @@ package mos6502
 
 import (
 	"fmt"
-	"reflect"
-	"runtime"
 )
 
 // adressModeFunc defines a function executing the adress mode of an operation
@@ -53,6 +51,12 @@ var (
 
 	// definition of current operation
 	opDef operationDefinition
+
+	// operation code of current operation
+	opCode uint8
+
+	// address mode of current operation
+	opAddressMode int
 
 	// PC = ProgramCounter
 	PC uint16
@@ -115,15 +119,15 @@ func Cycle() error {
 	if remainingCycles == 0 {
 		currentPC = PC
 
-		opCode := int(read(PC))
-
-		if opCode > len(operations) {
-			return fmt.Errorf("unknown operation: %x", opCode)
-		}
+		opCode = read(PC)
 
 		PC++
 
 		opDef = operations[opCode]
+
+		if opDef.memnonic == "???" {
+			return fmt.Errorf("unknown operation: %x", opCode)
+		}
 
 		remainingCycles = opDef.cycles
 
@@ -139,13 +143,13 @@ func Cycle() error {
 
 func fetch() uint8 {
 
-	// not sure whether this is the best way to compare function pointers...
-	opAddressMode := runtime.FuncForPC(reflect.ValueOf(opDef.adressMode).Pointer()).Name()
-	impAdressMode := runtime.FuncForPC(reflect.ValueOf(IMP).Pointer()).Name()
-
-	if opAddressMode != impAdressMode {
+	if opAddressMode != amIMP {
 		fetched = read(absoluteAddress)
 	}
 
 	return fetched
+}
+
+func absoluteSP() uint16 {
+	return 0x0100 + uint16(SP)
 }

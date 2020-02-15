@@ -26,3 +26,11 @@ func SetFlag(flag uint8, value bool) {
 func GetFlag(flag uint8) bool {
 	return (Status & flag) != 0
 }
+
+// GetFlag get a flag from the Status Register as numeric value
+func GetFlagN(flag uint8) uint16 {
+	if (Status & flag) != 0 {
+		return 1
+	}
+	return 0
+}
