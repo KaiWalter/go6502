@@ -53,6 +53,9 @@ var (
 	// SP = Stack Pointer
 	SP uint8
 
+	// Status register
+	Status uint8
+
 	// A Accumulator
 	A uint8
 
@@ -72,6 +75,7 @@ var (
 	fetched uint8
 )
 
+// Init resets CPU values
 func Init(rf ReadFunc, wf WriteFunc) error {
 
 	read = rf
@@ -83,6 +87,7 @@ func Init(rf ReadFunc, wf WriteFunc) error {
 	return nil
 }
 
+// Run executes one process cycle
 func Run() error {
 
 	opCode := int(read(PC))

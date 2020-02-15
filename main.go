@@ -19,6 +19,4 @@ func main() {
 
 	mos6502.Init(readMem, writeMem)
 
-	mos6502.Run()
-
 }
