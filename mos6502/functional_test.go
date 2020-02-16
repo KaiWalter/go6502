@@ -36,8 +36,8 @@ func TestFunctional(t *testing.T) {
 
 	// act
 	for int(PC) != endOfMain {
-		if PC == 0x0cc1 {
-			PC = 0x0cc1
+		if PC == 0x16f9 {
+			PC = 0x16f9
 		}
 		err := Cycle()
 		if err != nil {

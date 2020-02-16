@@ -258,7 +258,7 @@ func CPX() int {
 	SetFlag(C, X >= fetched)
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
-	return 1
+	return 0
 }
 
 func CPY() int {
@@ -267,7 +267,7 @@ func CPY() int {
 	SetFlag(C, Y >= fetched)
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
-	return 1
+	return 0
 }
 
 func DEC() int {
@@ -301,7 +301,7 @@ func EOR() int {
 	SetFlag(Z, A == 0x00)
 	SetFlag(N, A&0x80 != 0)
 
-	return 0
+	return 1
 }
 
 func INC() int {
@@ -543,7 +543,7 @@ func TAX() int {
 }
 
 func TAY() int {
-	X = Y
+	Y = A
 	SetFlag(Z, Y == 0x00)
 	SetFlag(N, Y&0x80 != 0)
 	return 0
