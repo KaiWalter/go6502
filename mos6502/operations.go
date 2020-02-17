@@ -50,7 +50,7 @@ func ASL() int {
 	SetFlag(C, (temp&0xFF00) > 0)
 	SetFlag(Z, (temp&0x00FF) == 0x00)
 	SetFlag(N, temp&0x80 != 0)
-	if opAddressMode == amIMM {
+	if opAddressMode == amIMP {
 		A = uint8(temp & 0x00FF)
 	} else {
 		write(absoluteAddress, uint8(temp&0x00FF))
@@ -374,6 +374,11 @@ func LSR() int {
 	temp := uint16(fetched) >> 1
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
+	if opAddressMode == amIMP {
+		A = uint8(temp & 0x00FF)
+	} else {
+		write(absoluteAddress, uint8(temp&0x00FF))
+	}
 	return 0
 }
 
