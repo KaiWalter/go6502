@@ -50,8 +50,8 @@ func TestFunctional(t *testing.T) {
 				t.Errorf("functional test loops on %x", PC)
 				break
 			}
+			fmt.Printf("%x %x %s A:%x X:%x Y:%x Status:%x\n", currentPC, prevPC, opDef.memnonic, A, X, Y, Status)
 			prevPC = currentPC
-			fmt.Printf("%x %x %s A:%x Y:%x Status:%x\n", currentPC, prevPC, opDef.memnonic, A, Y, Status)
 			newInstruction = false
 		}
 
