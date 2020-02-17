@@ -100,11 +100,15 @@ func IZX() int {
 	tempAddress := uint16(read(PC))
 	PC++
 
-	lo := uint16(read((tempAddress + uint16(X)) & 0x00FF))
-	hi := uint16(read((tempAddress + uint16(X) + 1) & 0x00FF))
+	lo := uint16(read(tempAddress & 0x00FF))
+	hi := uint16(read((tempAddress + 1) & 0x00FF))
 
 	absoluteAddress = hi<<8 | lo
+	absoluteAddress += uint16(X)
 
+	if (absoluteAddress & 0xFF00) != (hi << 8) {
+		return 1
+	}
 	return 0
 }
 
@@ -114,11 +118,15 @@ func IZY() int {
 	tempAddress := uint16(read(PC))
 	PC++
 
-	lo := uint16(read((tempAddress + uint16(Y)) & 0x00FF))
-	hi := uint16(read((tempAddress + uint16(Y) + 1) & 0x00FF))
+	lo := uint16(read(tempAddress & 0x00FF))
+	hi := uint16(read((tempAddress + 1) & 0x00FF))
 
 	absoluteAddress = hi<<8 | lo
+	absoluteAddress += uint16(Y)
 
+	if (absoluteAddress & 0xFF00) != (hi << 8) {
+		return 1
+	}
 	return 0
 }
 

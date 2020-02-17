@@ -36,8 +36,8 @@ func TestFunctional(t *testing.T) {
 
 	// act
 	for int(PC) != endOfMain {
-		if PC == 0x16f9 {
-			PC = 0x16f9
+		if PC == 0x16e9 && newInstruction {
+			PC = 0x16e9
 		}
 		err := Cycle()
 		if err != nil {
@@ -51,7 +51,7 @@ func TestFunctional(t *testing.T) {
 				break
 			}
 			prevPC = currentPC
-			fmt.Printf("%x %x %s\n", currentPC, prevPC, opDef.memnonic)
+			fmt.Printf("%x %x %s A:%x Y:%x Status:%x\n", currentPC, prevPC, opDef.memnonic, A, Y, Status)
 			newInstruction = false
 		}
 
