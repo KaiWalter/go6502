@@ -451,7 +451,7 @@ func ROL() int {
 func ROR() int {
 	fetch()
 	temp := (GetFlagN(C) << 7) | (uint16(fetched) >> 1)
-	SetFlag(C, temp&0x01 != 0)
+	SetFlag(C, fetched&0x01 != 0)
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
 	if opAddressMode == amIMP {
