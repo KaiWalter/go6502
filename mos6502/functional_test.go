@@ -35,7 +35,7 @@ func TestFunctional(t *testing.T) {
 	newInstruction := true
 
 	// act
-	for int(PC) != endOfMain {
+	for int(currentPC) != endOfMain {
 		err := Cycle()
 		if err != nil {
 			t.Errorf("CPU processing failed %v", err)
@@ -47,10 +47,14 @@ func TestFunctional(t *testing.T) {
 				t.Errorf("functional test loops on %x", PC)
 				break
 			}
-			fmt.Printf("%s %x %x SP:%x A:%x X:%x Y:%x abs:%x fetched:%x Status:%x\n",
-				opDef.memnonic, currentPC, prevPC, SP, A, X, Y,
-				absoluteAddress, fetched, Status,
-			)
+			// uncomment for debugging:
+			// if currentPC >= 0x3480 && currentPC <= 0x3489 {
+			// 	fmt.Printf("%s %04x %04x SP:%02x A:%02x X:%02x Y:%02x abs:%04x fetched:%02x Status:%02x %08b %02x-%02x=%02x\n",
+			// 		opDef.memnonic, currentPC, prevPC, SP, A, X, Y,
+			// 		absoluteAddress, fetched, Status, Status,
+			// 		ram[0x0d], ram[0x12], ram[0x0f],
+			// 	)
+			// }
 			prevPC = currentPC
 			newInstruction = false
 		}
