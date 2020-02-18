@@ -36,8 +36,8 @@ func TestFunctional(t *testing.T) {
 
 	// act
 	for int(PC) != endOfMain {
-		if PC == 0x16e9 && newInstruction {
-			PC = 0x16e9
+		if PC == 0x23a3 && newInstruction {
+			PC = 0x23a3
 		}
 		err := Cycle()
 		if err != nil {
@@ -50,7 +50,9 @@ func TestFunctional(t *testing.T) {
 				t.Errorf("functional test loops on %x", PC)
 				break
 			}
-			fmt.Printf("%x %x %s A:%x X:%x Y:%x Status:%x\n", currentPC, prevPC, opDef.memnonic, A, X, Y, Status)
+			fmt.Printf("%s %x %x SP:%x A:%x X:%x Y:%x abs:%x fetched:%x Status:%x %x %x %x %x\n",
+				opDef.memnonic, currentPC, prevPC, SP, A, X, Y, absoluteAddress, fetched, Status,
+				ram[0x238], ram[0x239], ram[0x23A], ram[0x23B])
 			prevPC = currentPC
 			newInstruction = false
 		}
