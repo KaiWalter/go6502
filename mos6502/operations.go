@@ -491,8 +491,9 @@ func SBC() int {
 
 	temp := uint16(A) - uint16(fetched) - (1 - GetFlagN(C))
 
-	SetFlag(Z, (temp&0x00FF) == 0)
+	SetFlag(Z, temp&0x00FF == 0)
 	SetFlag(V, (uint16(A)^temp)&0x0080 != 0 && (uint16(A)^uint16(fetched))&0x0080 != 0)
+	SetFlag(N, temp&0x0080 != 0)
 
 	if GetFlag(D) {
 		if ((uint16(A) & 0xF) - (1 - GetFlagN(C))) < (uint16(fetched) & 0xF) {

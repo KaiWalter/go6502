@@ -36,9 +36,6 @@ func TestFunctional(t *testing.T) {
 
 	// act
 	for int(PC) != endOfMain {
-		if PC == 0x23a3 && newInstruction {
-			PC = 0x23a3
-		}
 		err := Cycle()
 		if err != nil {
 			t.Errorf("CPU processing failed %v", err)
