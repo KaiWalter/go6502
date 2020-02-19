@@ -85,40 +85,54 @@ func Test_LDA_IMM_STA_ABS(t *testing.T) {
 
 func Test_Dec_SBC(t *testing.T) {
 
-	// arrange
-	// CLC
-	// SED
-	// LDA $90
-	// SBC $00
-	// CMP $89
-	ram := [...]byte{0x90, 0x00, 0x89, 0x18, 0xF8, 0xA5, 0x00, 0xE5, 0x01, 0xC5, 0x03}
-
-	testRead := func(addr uint16) uint8 {
-		return ram[addr]
+	var tests = []struct {
+		op1     uint8
+		op2     uint8
+		result  uint8
+		carryop uint8
+	}{
+		{0x9A, 0x00, 0x9A, 0x38},
+		{0x90, 0x00, 0x89, 0x18},
 	}
 
-	testWrite := func(addr uint16, data uint8) {
-		ram[addr] = data
-	}
+	for _, tt := range tests {
+		// arrange
+		// CLC/SEC (<carryop)
+		// SED
+		// LDA op1
+		// SBC op2
+		// CMP result
+		ram := [...]byte{tt.op1, tt.op2, tt.result, tt.carryop, 0xF8, 0xA5, 0x00, 0xE5, 0x01, 0xC5, 0x03}
 
-	Init(testRead, testWrite)
-	WaitForSystemResetCycles()
-	PC = 3
-
-	// act
-	for int(PC) < len(ram) {
-		err := Cycle()
-		if err != nil {
-			t.Errorf("CPU processing failed %v", err)
-			break
+		testRead := func(addr uint16) uint8 {
+			return ram[addr]
 		}
-	}
 
-	// assert
-	if A != ram[0x2] {
-		t.Errorf("failed - value actual %02x / %02x expected", A, ram[0x2])
+		testWrite := func(addr uint16, data uint8) {
+			ram[addr] = data
+		}
+
+		Init(testRead, testWrite)
+		WaitForSystemResetCycles()
+		PC = 3
+
+		// act
+		for int(PC) < len(ram) {
+			err := Cycle()
+			if err != nil {
+				t.Errorf("CPU processing failed %v", err)
+				break
+			}
+		}
+
+		// assert
+		if A != ram[0x2] {
+			t.Errorf("failed - value actual %02x / %02x expected", A, ram[0x2])
+		}
+
 	}
 }
+
 func checkSetAccumulator(t *testing.T, testValue uint8) {
 	if testValue != 0 && GetFlag(Z) {
 		t.Errorf("expected Z flag set for set accumulator to 0x%x", testValue)
