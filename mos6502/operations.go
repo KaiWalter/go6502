@@ -500,7 +500,7 @@ func SBC() int {
 			temp -= 6
 		}
 
-		if temp&0xf0 > 0x90 {
+		if temp > 0x99 {
 			temp -= 0x60
 		}
 	}
