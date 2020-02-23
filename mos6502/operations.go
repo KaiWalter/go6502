@@ -10,9 +10,9 @@ func ADC() int {
 		}
 
 		if temp < 0x0f {
-			temp = temp&0xf + (uint16(A) & 0xF0) + (uint16(fetched) & 0xF0)
+			temp = temp&0x0f + (uint16(A) & 0xf0) + (uint16(fetched) & 0xf0)
 		} else {
-			temp = temp&0xf + (uint16(A) & 0xF0) + (uint16(fetched) & 0xF0) + 0x10
+			temp = temp&0x0f + (uint16(A) & 0xf0) + (uint16(fetched) & 0xf0) + 0x10
 		}
 
 		SetFlag(Z, (uint16(A)+uint16(fetched)+GetFlagN(C))&0xff == 0)
