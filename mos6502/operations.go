@@ -4,7 +4,7 @@ func ADC() int {
 	fetch()
 
 	if GetFlag(D) {
-		temp := (uint16(A) & 0xF) + (uint16(fetched) & 0xF) + GetFlagN(C)
+		temp := (uint16(A) & 0x0f) + (uint16(fetched) & 0x0f) + GetFlagN(C)
 		if temp > 9 {
 			temp += 6
 		}
@@ -500,11 +500,11 @@ func SBC() int {
 	SetFlag(V, (uint16(A)^uint16(fetched))&(uint16(A)^temp)&0x0080 != 0)
 
 	if GetFlag(D) {
-		tempA := (uint16(A) & 0xF) - (uint16(fetched) & 0xF) - (1 - GetFlagN(C))
+		tempA := (uint16(A) & 0x0f) - (uint16(fetched) & 0x0f) - (1 - GetFlagN(C))
 		if tempA&0x10 != 0 {
-			tempA = ((tempA - 6) & 0xf) | (uint16(A) & 0xf0) - (uint16(fetched) & 0xf0) - 0x10
+			tempA = ((tempA - 6) & 0x0f) | (uint16(A) & 0xf0) - (uint16(fetched) & 0xf0) - 0x10
 		} else {
-			tempA = (tempA & 0xf) | (uint16(A) & 0xf0) - (uint16(fetched) & 0xf0)
+			tempA = (tempA & 0x0f) | (uint16(A) & 0xf0) - (uint16(fetched) & 0xf0)
 		}
 
 		if tempA&0x100 != 0 {
