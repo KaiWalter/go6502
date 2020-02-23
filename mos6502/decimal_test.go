@@ -1,7 +1,6 @@
 package mos6502
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -35,7 +34,7 @@ func TestDecimal(t *testing.T) {
 	WaitForSystemResetCycles()
 	PC = 0x200
 
-	prevPC := uint16(0xFFFF)
+	// prevPC := uint16(0xFFFF)
 	newInstruction := true
 
 	// act
@@ -47,11 +46,11 @@ func TestDecimal(t *testing.T) {
 		}
 
 		if newInstruction {
-			fmt.Printf("%s %04x %04x SP:%02x A:%02x X:%02x Y:%02x abs:%04x fetched:%02x Status:%02x %08b\n",
-				opDef.memnonic, currentPC, prevPC, SP, A, X, Y,
-				absoluteAddress, fetched, Status, Status,
-			)
-			prevPC = currentPC
+			// fmt.Printf("%s %04x %04x SP:%02x A:%02x X:%02x Y:%02x abs:%04x fetched:%02x Status:%02x %08b\n",
+			// 	opDef.memnonic, currentPC, prevPC, SP, A, X, Y,
+			// 	absoluteAddress, fetched, Status, Status,
+			// )
+			// prevPC = currentPC
 			newInstruction = false
 		}
 

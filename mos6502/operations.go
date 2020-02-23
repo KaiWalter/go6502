@@ -3,32 +3,38 @@ package mos6502
 func ADC() int {
 	fetch()
 
-	temp := uint16(A) + uint16(fetched) + GetFlagN(C)
-
-	SetFlag(Z, (temp&0x00FF) == 0)
-
 	if GetFlag(D) {
-		if ((uint16(A) & 0xF) + (uint16(fetched) & 0xF) + GetFlagN(C)) > 9 {
+		temp := (uint16(A) & 0xF) + (uint16(fetched) & 0xF) + GetFlagN(C)
+		if temp > 9 {
 			temp += 6
 		}
 
-		SetFlag(N, temp&0x80 != 0)
-
-		SetFlag(V, (^(uint16(A)^uint16(fetched))&(uint16(A)^temp))&0x0080 != 0)
-
-		if temp > 0x99 {
-			temp += 96
+		if temp < 0x0f {
+			temp = temp&0xf + (uint16(A) & 0xF0) + (uint16(fetched) & 0xF0)
+		} else {
+			temp = temp&0xf + (uint16(A) & 0xF0) + (uint16(fetched) & 0xF0) + 0x10
 		}
-		SetFlag(C, temp > 0x99)
-	} else {
-		SetFlag(C, temp > 255)
 
-		SetFlag(V, (^(uint16(A)^uint16(fetched))&(uint16(A)^temp))&0x0080 != 0)
+		SetFlag(Z, (uint16(A)+uint16(fetched)+GetFlagN(C))&0xff == 0)
+		SetFlag(N, temp&0x80 != 0)
+		SetFlag(V, (uint16(A)^uint16(fetched))&0x0080 != 0 && (uint16(A)^temp)&0x0080 == 0)
+
+		if temp&0x1f0 > 0x90 {
+			temp += 0x60
+		}
+		SetFlag(C, temp > 0xf0)
+
+		A = uint8(temp & 0x00FF)
+	} else {
+		temp := uint16(A) + uint16(fetched) + GetFlagN(C)
 
 		SetFlag(N, temp&0x80 != 0)
-	}
+		SetFlag(Z, (temp&0x00FF) == 0)
+		SetFlag(V, ((^(uint16(A)^uint16(fetched)))&(uint16(A)^temp))&0x0080 != 0)
+		SetFlag(C, temp > 0xff)
 
-	A = uint8(temp & 0x00FF)
+		A = uint8(temp & 0x00FF)
+	}
 
 	return 1
 }
@@ -491,22 +497,28 @@ func SBC() int {
 
 	temp := uint16(A) - uint16(fetched) - (1 - GetFlagN(C))
 
-	SetFlag(Z, temp&0x00FF == 0)
-	SetFlag(V, (uint16(A)^temp)&0x0080 != 0 && (uint16(A)^uint16(fetched))&0x0080 != 0)
-	SetFlag(N, temp&0x0080 != 0)
+	SetFlag(V, (uint16(A)^uint16(fetched)&(uint16(A)^temp))&0x0080 != 0)
 
 	if GetFlag(D) {
-		if ((int16(A) & 0xF) - (1 - int16(GetFlagN(C)))) < (int16(fetched) & 0xF) {
-			temp -= 6
+		tempA := (uint16(A) & 0xF) - (uint16(fetched) & 0xF) - (1 - GetFlagN(C))
+		if tempA&0x10 != 0 {
+			tempA = ((tempA - 6) & 0xf) | (uint16(A) & 0xf0) - (uint16(fetched) & 0xf0) - 0x10
+		} else {
+			tempA = (tempA & 0xf) | (uint16(A) & 0xf0) - (uint16(fetched) & 0xf0)
 		}
 
-		if temp > 0x99 {
-			temp -= 0x60
+		if tempA&0x100 != 0 {
+			tempA -= 0x60
 		}
+
+		A = uint8(tempA & 0x00FF)
+	} else {
+		A = uint8(temp & 0x00FF)
 	}
-	SetFlag(C, temp < 0x100)
 
-	A = uint8(temp & 0x00FF)
+	SetFlag(C, temp < 0x100)
+	SetFlag(Z, temp&0x00FF == 0)
+	SetFlag(N, temp&0x0080 != 0)
 
 	return 1
 }
