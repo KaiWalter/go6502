@@ -1,4 +1,4 @@
-package mos6502
+package main
 
 func ADC() int {
 	fetch()
@@ -397,7 +397,6 @@ func NOP() int {
 	case 0xDC:
 	case 0xFC:
 		return 1
-		break
 	}
 
 	return 0

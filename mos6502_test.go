@@ -1,4 +1,4 @@
-package mos6502
+package main
 
 // used https://www.masswerk.at/6502/assembler.html to convert from assembler>binary
 
