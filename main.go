@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	apple1.Dummy()
+	apple1.Run()
 }
