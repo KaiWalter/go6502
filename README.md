@@ -4,4 +4,8 @@ This project is just for me to learn Go by solving a familar problem - 6502 emul
 
 ## key features
 
-- [Functional tests](https://github.com/Klaus2m5/6502_65C02_functional_tests) implemented with the `testing` framework, run with e.g. `go test -test.v`
+- [Functional tests](https://github.com/Klaus2m5/6502_65C02_functional_tests) implemented with the `testing` framework, run with e.g. `go test ./pkg/mos6502/ -test.v`
+
+## installation
+
+- follow instructions for SDL2 on <https://github.com/veandco/go-sdl2#requirements>
