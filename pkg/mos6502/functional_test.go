@@ -1,4 +1,4 @@
-package main
+package mos6502
 
 import (
 	"testing"
@@ -32,7 +32,7 @@ func TestFunctional(t *testing.T) {
 	newInstruction := true
 
 	// act
-	for int(currentPC) != endOfFunctionalTest {
+	for int(CurrentPC) != endOfFunctionalTest {
 		err := Cycle()
 		if err != nil {
 			t.Errorf("CPU processing failed %v", err)
@@ -40,18 +40,18 @@ func TestFunctional(t *testing.T) {
 		}
 
 		if newInstruction {
-			if currentPC == prevPC {
+			if CurrentPC == prevPC {
 				t.Errorf("functional test loops on %x", PC)
 				break
 			}
 			// uncomment for debugging:
-			// if currentPC >= 0x3480 && currentPC <= 0x3489 {
+			// if CurrentPC >= 0x3480 && CurrentPC <= 0x3489 {
 			// 	fmt.Printf("%s %04x %04x SP:%02x A:%02x X:%02x Y:%02x abs:%04x fetched:%02x Status:%02x %08b\n",
-			// 		opDef.memnonic, currentPC, prevPC, SP, A, X, Y,
+			// 		opDef.memnonic, CurrentPC, prevPC, SP, A, X, Y,
 			// 		absoluteAddress, fetched, Status, Status,
 			// 	)
 			// }
-			prevPC = currentPC
+			prevPC = CurrentPC
 			newInstruction = false
 		}
 

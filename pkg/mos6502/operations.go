@@ -1,4 +1,4 @@
-package main
+package mos6502
 
 func ADC() int {
 	fetch()

@@ -1,4 +1,4 @@
-package main
+package mos6502
 
 // Status Flags
 const (

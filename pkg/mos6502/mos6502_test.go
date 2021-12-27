@@ -1,8 +1,10 @@
-package main
+package mos6502
 
 // used https://www.masswerk.at/6502/assembler.html to convert from assembler>binary
 
-import "testing"
+import (
+	"testing"
+)
 
 // wait for system reset cycles
 func WaitForSystemResetCycles() {
