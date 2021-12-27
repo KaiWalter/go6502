@@ -85,18 +85,26 @@ func renderCharacter(x uint8, y uint8, charno uint8, bInvert bool) {
 	scanline := int(y) * nCharHeight
 	linepos := int(x) * nCharWidth
 
+	rects_on := []sdl.Rect{}
+	rects_off := []sdl.Rect{}
+
 	for r := 0; r < nCharHeight; r++ {
 		mask := charmasks[r]
 		for c := nCharWidth; c > 0; c-- {
 			rect := sdl.Rect{X: int32(linepos+c) * nPixelSize, Y: int32(scanline+r) * nPixelSize, W: nPixelSize, H: nPixelSize}
 			if mask&1 == 1 {
-				renderer.SetDrawColor(255, 255, 255, 255)
+				rects_on = append(rects_on, rect)
 			} else {
-				renderer.SetDrawColor(0, 0, 0, 255)
+				rects_off = append(rects_off, rect)
 			}
-			renderer.FillRect(&rect)
 			mask >>= 1
 		}
 	}
+
+	renderer.SetDrawColor(98, 143, 0, 255)
+	renderer.FillRects(rects_on)
+	renderer.SetDrawColor(0, 0, 0, 255)
+	renderer.FillRects(rects_off)
+
 	renderer.Present()
 }

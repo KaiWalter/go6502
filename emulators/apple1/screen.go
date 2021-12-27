@@ -18,11 +18,7 @@ const (
 
 var (
 	window   *sdl.Window
-	surface  *sdl.Surface
 	renderer *sdl.Renderer
-
-	x uint8
-	y uint8
 
 	outputChannel chan uint8
 )
@@ -43,15 +39,6 @@ func InitScreen() {
 	if err != nil {
 		panic(err)
 	}
-
-	// surface, err := window.GetSurface()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// surface.FillRect(nil, 0)
-	// rect := sdl.Rect{X: 0, Y: 0, W: nCharWidth * nCols * nPixelSize, H: nCharHeight * nRows * nPixelSize}
-	// surface.FillRect(&rect, 0xffff0000)
-	// window.UpdateSurface()
 
 	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
