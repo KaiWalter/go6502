@@ -1,4 +1,4 @@
-package main
+package mos6502
 
 import (
 	"testing"
@@ -17,11 +17,11 @@ func TestDecimal(t *testing.T) {
 		t.Errorf("could not retrieve ROM: %v", err)
 	}
 
-	testRead := func(addr uint16) uint8 {
+	testRead := func(addr uint16) byte {
 		return ram[addr]
 	}
 
-	testWrite := func(addr uint16, data uint8) {
+	testWrite := func(addr uint16, data byte) {
 		ram[addr] = data
 	}
 
@@ -47,10 +47,10 @@ func TestDecimal(t *testing.T) {
 
 		if newInstruction {
 			// fmt.Printf("%s %04x %04x SP:%02x A:%02x X:%02x Y:%02x abs:%04x fetched:%02x Status:%02x %08b\n",
-			// 	opDef.memnonic, currentPC, prevPC, SP, A, X, Y,
+			// 	opDef.memnonic, CurrentPC, prevPC, SP, A, X, Y,
 			// 	absoluteAddress, fetched, Status, Status,
 			// )
-			// prevPC = currentPC
+			// prevPC = CurrentPC
 			newInstruction = false
 		}
 

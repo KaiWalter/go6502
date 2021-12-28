@@ -1,4 +1,4 @@
-package main
+package mos6502
 
 func ADC() int {
 	fetch()
@@ -24,7 +24,7 @@ func ADC() int {
 		}
 		SetFlag(C, temp > 0xf0)
 
-		A = uint8(temp & 0x00FF)
+		A = byte(temp & 0x00FF)
 	} else {
 		temp := uint16(A) + uint16(fetched) + GetFlagN(C)
 
@@ -33,7 +33,7 @@ func ADC() int {
 		SetFlag(V, ((^(uint16(A)^uint16(fetched)))&(uint16(A)^temp))&0x0080 != 0)
 		SetFlag(C, temp > 0xff)
 
-		A = uint8(temp & 0x00FF)
+		A = byte(temp & 0x00FF)
 	}
 
 	return 1
@@ -57,9 +57,9 @@ func ASL() int {
 	SetFlag(Z, (temp&0x00FF) == 0x00)
 	SetFlag(N, temp&0x80 != 0)
 	if opAddressMode == amIMP {
-		A = uint8(temp & 0x00FF)
+		A = byte(temp & 0x00FF)
 	} else {
-		write(absoluteAddress, uint8(temp&0x00FF))
+		write(absoluteAddress, byte(temp&0x00FF))
 	}
 	return 0
 }
@@ -179,9 +179,9 @@ func BPL() int {
 }
 
 func BRK() int {
-	write(absoluteSP(), uint8((PC>>8)&0x00FF))
+	write(absoluteSP(), byte((PC>>8)&0x00FF))
 	SP--
-	write(absoluteSP(), uint8(PC&0x00FF))
+	write(absoluteSP(), byte(PC&0x00FF))
 	SP--
 
 	SetFlag(B, true)
@@ -279,7 +279,7 @@ func CPY() int {
 func DEC() int {
 	fetch()
 	temp := uint16(fetched) - 1
-	write(absoluteAddress, uint8(temp&0x00FF))
+	write(absoluteAddress, byte(temp&0x00FF))
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
 	return 0
@@ -313,7 +313,7 @@ func EOR() int {
 func INC() int {
 	fetch()
 	temp := uint16(fetched) + 1
-	write(absoluteAddress, uint8(temp&0x00FF))
+	write(absoluteAddress, byte(temp&0x00FF))
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
 	return 0
@@ -341,9 +341,9 @@ func JMP() int {
 func JSR() int {
 	PC--
 
-	write(absoluteSP(), uint8((PC>>8)&0x00FF))
+	write(absoluteSP(), byte((PC>>8)&0x00FF))
 	SP--
-	write(absoluteSP(), uint8(PC&0x00FF))
+	write(absoluteSP(), byte(PC&0x00FF))
 	SP--
 
 	PC = absoluteAddress
@@ -381,9 +381,9 @@ func LSR() int {
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
 	if opAddressMode == amIMP {
-		A = uint8(temp & 0x00FF)
+		A = byte(temp & 0x00FF)
 	} else {
-		write(absoluteAddress, uint8(temp&0x00FF))
+		write(absoluteAddress, byte(temp&0x00FF))
 	}
 	return 0
 }
@@ -445,10 +445,10 @@ func ROL() int {
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
 	if opAddressMode == amIMP {
-		A = uint8(temp & 0x00FF)
+		A = byte(temp & 0x00FF)
 
 	} else {
-		write(absoluteAddress, uint8(temp&0x00FF))
+		write(absoluteAddress, byte(temp&0x00FF))
 	}
 	return 0
 }
@@ -460,10 +460,10 @@ func ROR() int {
 	SetFlag(Z, (temp&0x00FF) == 0x0000)
 	SetFlag(N, temp&0x0080 != 0)
 	if opAddressMode == amIMP {
-		A = uint8(temp & 0x00FF)
+		A = byte(temp & 0x00FF)
 
 	} else {
-		write(absoluteAddress, uint8(temp&0x00FF))
+		write(absoluteAddress, byte(temp&0x00FF))
 	}
 	return 0
 }
@@ -510,9 +510,9 @@ func SBC() int {
 			tempA -= 0x60
 		}
 
-		A = uint8(tempA & 0x00FF)
+		A = byte(tempA & 0x00FF)
 	} else {
-		A = uint8(temp & 0x00FF)
+		A = byte(temp & 0x00FF)
 	}
 
 	SetFlag(C, temp < 0x100)
