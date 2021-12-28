@@ -51,7 +51,7 @@ func InitScreen() {
 	renderer.Clear()
 
 	// init screen buffer (for scrolling)
-	cScreenBuffer = make([]uint8, nCharWidth*nCharHeight)
+	cScreenBuffer = make([]uint8, nCols*nRows)
 	for i := 0; i < len(cScreenBuffer); i++ {
 		cScreenBuffer[i] = ' '
 	}
