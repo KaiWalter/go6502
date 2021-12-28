@@ -56,6 +56,13 @@ var (
 	sendInterrupt chan<- InteruptSignal
 	sendOutputA   chan<- byte
 	sendOutputB   chan<- byte
+
+	receiveInputA <-chan byte
+	receiveInputB <-chan byte
+	receiveCA1    <-chan Signal
+	receiveCA2    <-chan Signal
+	receiveCB1    <-chan Signal
+	receiveCB2    <-chan Signal
 )
 
 func init() {
@@ -236,13 +243,33 @@ func CpuWrite(addr uint16, data byte) {
 	}
 }
 
-func SetInputA(b byte) {
-	nIRA = b
+// output channel A handling
+
+func SetInputChannelA(ch <-chan byte) {
+	receiveInputA = ch
+	go receiveFromInputA()
 }
 
-func SetInputB(b byte) {
-	nIRB = b
+func receiveFromInputA() {
+	for b := range receiveInputA {
+		nIRA = b
+	}
 }
+
+// output channel B handling
+
+func SetInputChannelB(ch <-chan byte) {
+	receiveInputB = ch
+	go receiveFromInputB()
+}
+
+func receiveFromInputB() {
+	for b := range receiveInputB {
+		nIRB = b
+	}
+}
+
+// output channel handling
 
 func SetOutputChannelA(ch chan<- byte) {
 	sendOutputA = ch
@@ -256,7 +283,9 @@ func SetInterruptChannelB(ch chan<- InteruptSignal) {
 	sendInterrupt = ch
 }
 
-func SetCA1(b Signal) {
+// control A1 handling
+
+func setCA1(b Signal) {
 
 	var condition Signal
 
@@ -277,11 +306,20 @@ func SetCA1(b Signal) {
 	nCA1 = b
 }
 
-func GetCA1() Signal {
-	return nCA1
+func SetCA1Channel(ch <-chan Signal) {
+	receiveCA1 = ch
+	go receiveFromCA1()
 }
 
-func SetCA2(b Signal) {
+func receiveFromCA1() {
+	for s := range receiveCA1 {
+		setCA1(s)
+	}
+}
+
+// control A2 handling
+
+func setCA2(b Signal) {
 
 	var condition Signal
 
@@ -299,11 +337,20 @@ func SetCA2(b Signal) {
 	nCA2 = b
 }
 
-func GetCA2() Signal {
-	return nCA2
+func SetCA2Channel(ch <-chan Signal) {
+	receiveCA2 = ch
+	go receiveFromCA2()
 }
 
-func SetCB1(b Signal) {
+func receiveFromCA2() {
+	for s := range receiveCA2 {
+		setCA2(s)
+	}
+}
+
+// control B1 handling
+
+func setCB1(b Signal) {
 
 	var condition Signal
 
@@ -324,11 +371,20 @@ func SetCB1(b Signal) {
 	nCB1 = b
 }
 
-func GetCB1() Signal {
-	return nCB1
+func SetCB1Channel(ch <-chan Signal) {
+	receiveCB1 = ch
+	go receiveFromCB1()
 }
 
-func SetCB2(b Signal) {
+func receiveFromCB1() {
+	for s := range receiveCB1 {
+		setCB1(s)
+	}
+}
+
+// control B2 handling
+
+func setCB2(b Signal) {
 
 	var condition Signal
 
@@ -346,6 +402,13 @@ func SetCB2(b Signal) {
 	nCB2 = b
 }
 
-func GetCB2() Signal {
-	return nCB2
+func SetCB2Channel(ch <-chan Signal) {
+	receiveCB2 = ch
+	go receiveFromCB2()
+}
+
+func receiveFromCB2() {
+	for s := range receiveCB2 {
+		setCB2(s)
+	}
 }

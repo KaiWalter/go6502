@@ -8,6 +8,7 @@ This project is just for me to learn Go by solving a familar problem - 6502 emul
 ## key features
 
 - **Apple 1 emulation** converted from <https://github.com/KaiWalter/olcApple1> - still WORK IN PROGRESS
+- **PIA** runs in **Goroutines** can communicates over channels with devices like keyboard and screen
 - [Functional tests](https://github.com/Klaus2m5/6502_65C02_functional_tests) implemented with the `testing` framework, run with e.g. `go test ./pkg/mos6502/ -test.v`
 
 ## open issues

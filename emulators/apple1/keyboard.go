@@ -40,9 +40,9 @@ func initKeyboardMapping() {
 func handleKeypressed(keysym sdl.Keysym) {
 	keyvalue, exists := keyboardMapping[keysym.Sym]
 	if exists && keyvalue < 0x60 {
-		mc6821.SetCA1(mc6821.Fall)        // bring keyboard strobe to low to force active transition
-		mc6821.SetInputA(keyvalue | 0x80) // bit 7 is constantly set (+5V)
-		mc6821.SetCA1(mc6821.Rise)        // send only pulse
-		mc6821.SetCA1(mc6821.Fall)        // 20 micro secs are not worth emulating
+		piaCA1Channel <- mc6821.Fall               // bring keyboard strobe to low to force active transition
+		keyboardInputChannelA <- (keyvalue | 0x80) // bit 7 is constantly set (+5V)
+		piaCA1Channel <- mc6821.Rise               // send only pulse
+		piaCA1Channel <- mc6821.Fall               // 20 micro secs are not worth emulating
 	}
 }
