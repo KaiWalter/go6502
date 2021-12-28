@@ -1,13 +1,13 @@
 package mc6821
 
-type Signal uint8
+type Signal byte
 
 const (
 	Fall Signal = iota
 	Rise
 )
 
-type InteruptSignal uint8
+type InteruptSignal byte
 
 const (
 	NoSignal InteruptSignal = iota
@@ -17,14 +17,14 @@ const (
 )
 
 var (
-	nORA      uint8  // Output register A
-	nIRA      uint8  // Input register A
-	nDDRA     uint8  // data direction register A             (Output=1, Input=0)
-	nDDRA_neg uint8  // negative data direction register A    (Output=0, Input=1)
+	nORA      byte   // Output register A
+	nIRA      byte   // Input register A
+	nDDRA     byte   // data direction register A             (Output=1, Input=0)
+	nDDRA_neg byte   // negative data direction register A    (Output=0, Input=1)
 	nCA1      Signal // control line A1
 	nCA2      Signal // control line A2
 
-	nCRA                        uint8 // control register A
+	nCRA                        byte // control register A
 	bCRA_Bit0_EnableIRQA1       bool
 	bCRA_Bit1_CA1_PositiveTrans bool
 	bCRA_Bit2_WritePort         bool
@@ -35,14 +35,14 @@ var (
 	bCRA_Bit4_ManualOutput      bool
 	bCRA_Bit5_OutputMode        bool
 
-	nORB      uint8  // Output register B
-	nIRB      uint8  // Input register B
-	nDDRB     uint8  // data direction register B             (Output=1, Input=0)
-	nDDRB_neg uint8  // negative data direction register B    (Output=0, Input=1)
+	nORB      byte   // Output register B
+	nIRB      byte   // Input register B
+	nDDRB     byte   // data direction register B             (Output=1, Input=0)
+	nDDRB_neg byte   // negative data direction register B    (Output=0, Input=1)
 	nCB1      Signal // control line B1
 	nCB2      Signal // control line B2
 
-	nCRB                        uint8 // control register B
+	nCRB                        byte // control register B
 	bCRB_Bit0_EnableIRQB1       bool
 	bCRB_Bit1_CB1_PositiveTrans bool
 	bCRB_Bit2_WritePort         bool
@@ -54,8 +54,8 @@ var (
 	bCRB_Bit5_OutputMode        bool
 
 	sendInterrupt chan<- InteruptSignal
-	sendOutputA   chan<- uint8
-	sendOutputB   chan<- uint8
+	sendOutputA   chan<- byte
+	sendOutputB   chan<- byte
 )
 
 func init() {
@@ -148,9 +148,9 @@ func updateIRQ() {
 	}
 }
 
-func CpuRead(addr uint16) uint8 {
+func CpuRead(addr uint16) byte {
 	var reg = addr & 0x03
-	var data uint8 = 0
+	var data byte = 0
 	switch reg {
 
 	case 0: // PA
@@ -179,7 +179,7 @@ func CpuRead(addr uint16) uint8 {
 	return data
 }
 
-func CpuWrite(addr uint16, data uint8) {
+func CpuWrite(addr uint16, data byte) {
 	var reg = addr & 0x03
 
 	switch reg {
@@ -187,7 +187,7 @@ func CpuWrite(addr uint16, data uint8) {
 		if bCRA_Bit2_WritePort {
 			nORA = data // into output register A
 			// mix input and output
-			var bOut uint8 = 0
+			var bOut byte = 0
 			bOut |= nORA & nDDRA
 			bOut |= nIRA & nDDRA_neg
 			// non blocking send
@@ -209,7 +209,7 @@ func CpuWrite(addr uint16, data uint8) {
 		if bCRB_Bit2_WritePort {
 			nORB = data // into output register B
 			// mix input and output
-			var bOut uint8 = 0
+			var bOut byte = 0
 			bOut |= nORB & nDDRB
 			bOut |= nIRB & nDDRB_neg
 			// non blocking send
@@ -236,19 +236,19 @@ func CpuWrite(addr uint16, data uint8) {
 	}
 }
 
-func SetInputA(b uint8) {
+func SetInputA(b byte) {
 	nIRA = b
 }
 
-func SetInputB(b uint8) {
+func SetInputB(b byte) {
 	nIRB = b
 }
 
-func SetOutputChannelA(ch chan<- uint8) {
+func SetOutputChannelA(ch chan<- byte) {
 	sendOutputA = ch
 }
 
-func SetOutputChannelB(ch chan<- uint8) {
+func SetOutputChannelB(ch chan<- byte) {
 	sendOutputB = ch
 }
 

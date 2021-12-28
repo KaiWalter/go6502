@@ -1,5 +1,15 @@
 package apple1
 
+// Reference material:
+// http://www.myapplecomputer.net/apple-1-specs.html
+// http://www.applefritter.com/book/export/html/22
+
+// Apple 1 HEXROM DISASSEMBLY:
+// https://gist.github.com/robey/1bb6a99cd19e95c81979b1828ad70612
+
+// Test ROMs:
+// https://github.com/Klaus2m5/6502_65C02_functional_tests
+
 import (
 	"bufio"
 	"fmt"
@@ -12,45 +22,47 @@ import (
 )
 
 var (
-	ram []uint8
+	ram []byte
+
+	screenOutputChannel chan byte
 )
 
 func init() {
 
 	initKeyboardMapping()
 
-	ram = make([]uint8, 64*1024)
+	ram = make([]byte, 64*1024)
 	for i := 0; i < len(ram); i++ {
 		ram[i] = 0x00
 	}
 }
 
 // wait for system reset cycles
-func WaitForSystemResetCycles() {
+func waitForSystemResetCycles() {
 	for !mos6502.CyclesCompleted() {
 		mos6502.Cycle()
 	}
 }
 
 func retrieveROM(filename string) ([]byte, error) {
-	romfile, err := os.Open(filename)
+	romFile, err := os.Open(filename)
 
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %v", err)
 	}
 
-	defer romfile.Close()
+	defer romFile.Close()
 
-	stats, statsErr := romfile.Stat()
+	stats, statsErr := romFile.Stat()
 	if statsErr != nil {
 		return nil, statsErr
 	}
 
 	buffer := make([]byte, stats.Size())
 
-	bufferreader := bufio.NewReader(romfile)
+	bufferReader := bufio.NewReader(romFile)
 
-	_, err = bufferreader.Read(buffer)
+	_, err = bufferReader.Read(buffer)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file: %v", err)
 	}
@@ -58,31 +70,35 @@ func retrieveROM(filename string) ([]byte, error) {
 	return buffer, err
 }
 
-func Run() {
-	InitScreen()
-	defer DestroyScreen()
+func loadROMToAddress(filename string, addr uint16) {
+	fmt.Printf("loading ROM %v to %x...\n", filename, addr)
 
-	// arrange
-	rom, err := retrieveROM("./roms/Apple1_HexMonitor.rom")
+	rom, err := retrieveROM(filename)
 	if err != nil {
 		fmt.Printf("could not retrieve ROM: %v\n", err)
 		return
 	}
 
 	for i := 0; i < len(rom); i++ {
-		ram[0xFF00+i] = rom[i]
+		ram[addr+uint16(i)] = rom[i]
 	}
-	ram[0xFFFC] = 0x00
-	ram[0xFFFD] = 0xFF
+}
 
-	testRead := func(addr uint16) uint8 {
+func Run() {
+	initScreen()
+	defer destroyScreen()
+
+	loadROMToAddress("./roms/Apple1_HexMonitor.rom", 0xFF00)
+	loadROMToAddress("./roms/Apple1_basic.rom", 0xE000)
+
+	testRead := func(addr uint16) byte {
 		if addr >= 0xD010 && addr <= 0xD01F {
 			return mc6821.CpuRead(addr)
 		}
 		return ram[addr]
 	}
 
-	testWrite := func(addr uint16, data uint8) {
+	testWrite := func(addr uint16, data byte) {
 		if addr >= 0xD010 && addr <= 0xD01F {
 			mc6821.CpuWrite(addr, data)
 		} else {
@@ -91,8 +107,12 @@ func Run() {
 	}
 
 	mos6502.Init(testRead, testWrite)
-	mos6502.PC = 0xFF00
-	WaitForSystemResetCycles()
+	waitForSystemResetCycles()
+
+	// wire up PIA with screen output
+	screenOutputChannel = make(chan byte, 10)
+	mc6821.SetOutputChannelB(screenOutputChannel)
+	go receiveOutput()
 
 	mainLoop()
 }
@@ -106,8 +126,8 @@ func mainLoop() {
 			case *sdl.QuitEvent:
 				running = false
 			case *sdl.KeyboardEvent:
-				fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tmodifiers:%d\tstate:%d\trepeat:%d\n",
-					t.Timestamp, t.Type, t.Keysym.Sym, t.Keysym.Mod, t.State, t.Repeat)
+				// fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tmodifiers:%d\tstate:%d\trepeat:%d\n",
+				// 	t.Timestamp, t.Type, t.Keysym.Sym, t.Keysym.Mod, t.State, t.Repeat)
 				if t.State == 0 {
 					handleKeypressed(t.Keysym)
 				}
@@ -116,12 +136,12 @@ func mainLoop() {
 
 		// TO DO https://floooh.github.io/2019/12/13/cycle-stepped-6502.html
 
-		if mos6502.CyclesCompleted() {
-			fmt.Printf("Current PC %x PC %x\n", mos6502.CurrentPC, mos6502.PC)
-			if mos6502.PC == 0xfff4 {
-				fmt.Println("SEND TO DISPLAY!")
-			}
-		}
+		// if mos6502.CyclesCompleted() {
+		// 	fmt.Printf("Current PC %x PC %x\n", mos6502.CurrentPC, mos6502.PC)
+		// 	if mos6502.PC == 0xfff4 {
+		// 		fmt.Println("SEND TO DISPLAY!")
+		// 	}
+		// }
 
 		err := mos6502.Cycle()
 		if err != nil {
@@ -129,7 +149,7 @@ func mainLoop() {
 			break
 		}
 
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 
 	}
 }

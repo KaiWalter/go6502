@@ -9,53 +9,42 @@ import (
 )
 
 var (
-	rom          [][]uint8
-	rom_inverted [][]uint8
+	rom         [][]byte
+	romInverted [][]byte
 )
 
-func loadRoms() {
-	var err error
+func loadCharacterRom(filename string, bInvert bool) ([][]byte, [][]byte, error) {
 
-	// load character ROMs
-	rom, rom_inverted, err = loadCharacterRom("./roms/Apple1_charmap.rom", false)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
-func loadCharacterRom(filename string, bInvert bool) ([][]uint8, [][]uint8, error) {
-
-	romfile, err := os.Open(filename)
+	romFile, err := os.Open(filename)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error opening file: %v", err)
 	}
 
-	defer romfile.Close()
+	defer romFile.Close()
 
-	buffer := make([]uint8, 256*8)
+	buffer := make([]byte, 256*8)
 
-	bufferreader := bufio.NewReader(romfile)
+	bufferReader := bufio.NewReader(romFile)
 
-	_, err = bufferreader.Read(buffer)
+	_, err = bufferReader.Read(buffer)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error reading file: %v", err)
 	}
 
 	// feed into character map
 	// flip/reverse bits from right-to-left to left-to-right
-	char_buffer := make([][]byte, 256)
-	char_buffer_inv := make([][]byte, 256)
+	charBuffer := make([][]byte, 256)
+	charBufferInv := make([][]byte, 256)
 
-	for char_index := range char_buffer {
-		char_buffer[char_index] = make([]byte, 8)
-		char_buffer_inv[char_index] = make([]byte, 8)
-		for line_index := range char_buffer[char_index] {
+	for char_index := range charBuffer {
+		charBuffer[char_index] = make([]byte, 8)
+		charBufferInv[char_index] = make([]byte, 8)
+		for line_index := range charBuffer[char_index] {
 			rom_byte := buffer[(char_index*8)+line_index]
-			var converted_byte uint8 = 0
+			var converted_byte byte = 0
 			if rom_byte != 0 {
-				var fromMask uint8 = 0x80
-				var toMask uint8 = 0x01
+				var fromMask byte = 0x80
+				var toMask byte = 0x01
 				for i := 0; i < 8; i++ {
 					if rom_byte&fromMask == fromMask {
 						converted_byte |= toMask
@@ -65,33 +54,33 @@ func loadCharacterRom(filename string, bInvert bool) ([][]uint8, [][]uint8, erro
 				}
 			}
 
-			char_buffer[char_index][line_index] = converted_byte
-			char_buffer_inv[char_index][line_index] = ^converted_byte
+			charBuffer[char_index][line_index] = converted_byte
+			charBufferInv[char_index][line_index] = ^converted_byte
 		}
 	}
 
-	return char_buffer, char_buffer_inv, err
+	return charBuffer, charBufferInv, err
 }
 
-func renderCharacter(x uint8, y uint8, charno uint8, bInvert bool) {
+func renderCharacter(x byte, y byte, charno byte, bInvert bool) {
 
-	var charmasks []uint8
+	var charmasks []byte
 	if bInvert {
-		charmasks = rom_inverted[charno]
+		charmasks = romInverted[charno]
 	} else {
 		charmasks = rom[charno]
 	}
 
-	scanline := int(y) * nCharHeight
-	linepos := int(x) * nCharWidth
+	scanline := int(y) * charHeight
+	linepos := int(x) * charWidth
 
 	rects_on := []sdl.Rect{}
 	rects_off := []sdl.Rect{}
 
-	for r := 0; r < nCharHeight; r++ {
+	for r := 0; r < charHeight; r++ {
 		mask := charmasks[r]
-		for c := nCharWidth; c > 0; c-- {
-			rect := sdl.Rect{X: int32(linepos+c) * nPixelSize, Y: int32(scanline+r) * nPixelSize, W: nPixelSize, H: nPixelSize}
+		for c := charWidth; c > 0; c-- {
+			rect := sdl.Rect{X: int32(linepos+c) * pixelSize, Y: int32(scanline+r) * pixelSize, W: pixelSize, H: pixelSize}
 			if mask&1 == 1 {
 				rects_on = append(rects_on, rect)
 			} else {

@@ -6,12 +6,12 @@ import (
 )
 
 var (
-	keymapping map[sdl.Keycode]uint8
+	keyboardMapping map[sdl.Keycode]byte
 )
 
 func initKeyboardMapping() {
 
-	keymapping = map[sdl.Keycode]uint8{
+	keyboardMapping = map[sdl.Keycode]byte{
 		0x08: 0x08,
 		0x0D: 0x0D,
 		0x20: 0x20,
@@ -23,22 +23,22 @@ func initKeyboardMapping() {
 
 		'.': 0x2E,
 		',': 0x2C,
-		':': ':',
+		// TO DO add missing mappings
 	}
 
 	// map characters A-Z
 	for i := sdl.Keycode(0x61); i <= 0x7a; i++ {
-		keymapping[i] = uint8(i - 0x20)
+		keyboardMapping[i] = byte(i - 0x20)
 	}
 	// map digits 0-9
 	for i := sdl.Keycode(0x30); i <= 0x39; i++ {
-		keymapping[i] = uint8(i)
+		keyboardMapping[i] = byte(i)
 	}
 
 }
 
 func handleKeypressed(keysym sdl.Keysym) {
-	keyvalue, exists := keymapping[keysym.Sym]
+	keyvalue, exists := keyboardMapping[keysym.Sym]
 	if exists && keyvalue < 0x60 {
 		mc6821.SetCA1(mc6821.Fall)        // bring keyboard strobe to low to force active transition
 		mc6821.SetInputA(keyvalue | 0x80) // bit 7 is constantly set (+5V)

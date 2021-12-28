@@ -37,10 +37,10 @@ var operations = [...]operationDefinition{
 }
 
 // ReadFunc defines a function where the CPU can read from RAM or Bus
-type ReadFunc func(uint16) uint8
+type ReadFunc func(uint16) byte
 
 // WriteFunc defines a function where the CPU can write to RAM or Bus
-type WriteFunc func(uint16, uint8)
+type WriteFunc func(uint16, byte)
 
 var (
 	// read points to a function where the CPU can read from RAM or Bus
@@ -53,7 +53,7 @@ var (
 	opDef operationDefinition
 
 	// operation code of current operation
-	opCode uint8
+	opCode byte
 
 	// address mode of current operation
 	opAddressMode int
@@ -68,19 +68,19 @@ var (
 	remainingCycles int
 
 	// SP = Stack Pointer
-	SP uint8
+	SP byte
 
 	// Status register
-	Status uint8
+	Status byte
 
 	// A Accumulator
-	A uint8
+	A byte
 
 	// X Index
-	X uint8
+	X byte
 
 	// Y Index
-	Y uint8
+	Y byte
 
 	// address to fetch next value from
 	absoluteAddress uint16
@@ -89,7 +89,7 @@ var (
 	relativeAddress uint16
 
 	// value fetched by address operation
-	fetched uint8
+	fetched byte
 )
 
 // Init resets CPU values
@@ -105,7 +105,11 @@ func Init(rf ReadFunc, wf WriteFunc) error {
 
 func Reset() {
 	remainingCycles = 7
-	PC = 0
+
+	PChigh := uint16(read(0xFFFD)) << 8
+	PClow := uint16(read(0xFFFC))
+	PC = PChigh + PClow
+
 	SP = 0xFD
 	Status = 0x00 | U
 	fetched = 0
@@ -145,7 +149,7 @@ func Cycle() error {
 	return nil
 }
 
-func fetch() uint8 {
+func fetch() byte {
 
 	if opAddressMode != amIMP {
 		fetched = read(absoluteAddress)

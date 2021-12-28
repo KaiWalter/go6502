@@ -16,11 +16,11 @@ func TestFunctional(t *testing.T) {
 		t.Errorf("could not retrieve ROM: %v", err)
 	}
 
-	testRead := func(addr uint16) uint8 {
+	testRead := func(addr uint16) byte {
 		return ram[addr]
 	}
 
-	testWrite := func(addr uint16, data uint8) {
+	testWrite := func(addr uint16, data byte) {
 		ram[addr] = data
 	}
 
