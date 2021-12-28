@@ -21,13 +21,10 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const (
-	piaStartAddress uint16 = 0xD010
-	piaEndAddress   uint16 = 0xD01F
-)
-
 var (
 	ram []byte
+
+	pia *mc6821.MC6821
 
 	screenOutputChannel   chan byte
 	keyboardInputChannelA chan byte
@@ -42,6 +39,33 @@ func init() {
 	for i := 0; i < len(ram); i++ {
 		ram[i] = 0x00
 	}
+}
+
+func Run() {
+	initScreen()
+	defer destroyScreen()
+
+	// load ROMs
+	loadROMToAddress("./roms/Apple1_HexMonitor.rom", 0xFF00)
+	loadROMToAddress("./roms/Apple1_basic.rom", 0xE000)
+
+	// wire up PIA with screen output and keyboard input
+	pia = mc6821.NewMC6821("Apple1_PIA", 0xD010, 0xD01F)
+	screenOutputChannel = make(chan byte, 10)
+	pia.SetOutputChannelB(screenOutputChannel)
+	go receiveOutput()
+
+	keyboardInputChannelA = make(chan byte, 10)
+	pia.SetInputChannelA(keyboardInputChannelA)
+
+	piaCA1Channel = make(chan mc6821.Signal, 10)
+	pia.SetCA1Channel(piaCA1Channel)
+
+	// init 6502
+	mos6502.Init(readMemory, writeMemory)
+	waitForSystemResetCycles()
+
+	mainLoop()
 }
 
 // wait for system reset cycles
@@ -91,46 +115,19 @@ func loadROMToAddress(filename string, addr uint16) {
 	}
 }
 
-func Run() {
-	initScreen()
-	defer destroyScreen()
-
-	// load ROMs
-	loadROMToAddress("./roms/Apple1_HexMonitor.rom", 0xFF00)
-	loadROMToAddress("./roms/Apple1_basic.rom", 0xE000)
-
-	// emulate address bus
-	testRead := func(addr uint16) byte {
-		if addr >= piaStartAddress && addr <= piaEndAddress {
-			return mc6821.CpuRead(addr)
-		}
-		return ram[addr]
+func readMemory(addr uint16) byte {
+	if addr >= pia.StartAddress && addr <= pia.EndAddress {
+		return pia.CpuRead(addr)
 	}
+	return ram[addr]
+}
 
-	testWrite := func(addr uint16, data byte) {
-		if addr >= piaStartAddress && addr <= piaEndAddress {
-			mc6821.CpuWrite(addr, data)
-		} else {
-			ram[addr] = data
-		}
+func writeMemory(addr uint16, data byte) {
+	if addr >= pia.StartAddress && addr <= pia.EndAddress {
+		pia.CpuWrite(addr, data)
+	} else {
+		ram[addr] = data
 	}
-
-	// wire up PIA with screen output and keyboard input
-	screenOutputChannel = make(chan byte, 10)
-	mc6821.SetOutputChannelB(screenOutputChannel)
-	go receiveOutput()
-
-	keyboardInputChannelA = make(chan byte, 10)
-	mc6821.SetInputChannelA(keyboardInputChannelA)
-
-	piaCA1Channel = make(chan mc6821.Signal, 10)
-	mc6821.SetCA1Channel(piaCA1Channel)
-
-	// init 6502
-	mos6502.Init(testRead, testWrite)
-	waitForSystemResetCycles()
-
-	mainLoop()
 }
 
 func mainLoop() {

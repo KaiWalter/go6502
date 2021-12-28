@@ -16,42 +16,46 @@ const (
 	BRK
 )
 
-var (
-	nORA      byte   // Output register A
-	nIRA      byte   // Input register A
-	nDDRA     byte   // data direction register A             (Output=1, Input=0)
-	nDDRA_neg byte   // negative data direction register A    (Output=0, Input=1)
-	nCA1      Signal // control line A1
-	nCA2      Signal // control line A2
+type MC6821 struct {
+	Name         string
+	StartAddress uint16
+	EndAddress   uint16
 
-	nCRA                        byte // control register A
-	bCRA_Bit0_EnableIRQA1       bool
-	bCRA_Bit1_CA1_PositiveTrans bool
-	bCRA_Bit2_WritePort         bool
-	bCRA_Bit3_EnableIRQA2       bool
-	bCRA_Bit3_PulseOutput       bool
-	bCRA_Bit3_CA2_set_high      bool
-	bCRA_Bit4_CA2_PositiveTrans bool
-	bCRA_Bit4_ManualOutput      bool
-	bCRA_Bit5_OutputMode        bool
+	ORA      byte   // Output register A
+	IRA      byte   // Input register A
+	DDRA     byte   // data direction register A             (Output=1, Input=0)
+	DDRA_neg byte   // negative data direction register A    (Output=0, Input=1)
+	CA1      Signal // control line A1
+	CA2      Signal // control line A2
 
-	nORB      byte   // Output register B
-	nIRB      byte   // Input register B
-	nDDRB     byte   // data direction register B             (Output=1, Input=0)
-	nDDRB_neg byte   // negative data direction register B    (Output=0, Input=1)
-	nCB1      Signal // control line B1
-	nCB2      Signal // control line B2
+	CRA                        byte // control register A
+	CRA_Bit0_EnableIRQA1       bool
+	CRA_Bit1_CA1_PositiveTrans bool
+	CRA_Bit2_WritePort         bool
+	CRA_Bit3_EnableIRQA2       bool
+	CRA_Bit3_PulseOutput       bool
+	CRA_Bit3_CA2_set_high      bool
+	CRA_Bit4_CA2_PositiveTrans bool
+	CRA_Bit4_ManualOutput      bool
+	CRA_Bit5_OutputMode        bool
 
-	nCRB                        byte // control register B
-	bCRB_Bit0_EnableIRQB1       bool
-	bCRB_Bit1_CB1_PositiveTrans bool
-	bCRB_Bit2_WritePort         bool
-	bCRB_Bit3_EnableIRQB2       bool
-	bCRB_Bit3_PulseOutput       bool
-	bCRB_Bit3_CB2_set_high      bool
-	bCRB_Bit4_CB2_PositiveTrans bool
-	bCRB_Bit4_ManualOutput      bool
-	bCRB_Bit5_OutputMode        bool
+	ORB      byte   // Output register B
+	IRB      byte   // Input register B
+	DDRB     byte   // data direction register B             (Output=1, Input=0)
+	DDRB_neg byte   // negative data direction register B    (Output=0, Input=1)
+	CB1      Signal // control line B1
+	CB2      Signal // control line B2
+
+	CRB                        byte // control register B
+	CRB_Bit0_EnableIRQB1       bool
+	CRB_Bit1_CB1_PositiveTrans bool
+	CRB_Bit2_WritePort         bool
+	CRB_Bit3_EnableIRQB2       bool
+	CRB_Bit3_PulseOutput       bool
+	CRB_Bit3_CB2_set_high      bool
+	CRB_Bit4_CB2_PositiveTrans bool
+	CRB_Bit4_ManualOutput      bool
+	CRB_Bit5_OutputMode        bool
 
 	sendInterrupt chan<- InteruptSignal
 	sendOutputA   chan<- byte
@@ -63,352 +67,377 @@ var (
 	receiveCA2    <-chan Signal
 	receiveCB1    <-chan Signal
 	receiveCB2    <-chan Signal
-)
-
-func init() {
-	nIRA = 0xFF
-	nIRB = 0
-
-	nCA1, nCA2 = Rise, Rise
-
-	nCRA, nCRB, nORA, nORB = 0, 0, 0, 0
-
-	nDDRA, nDDRB = 0, 0
-	nDDRA_neg, nDDRB_neg = 0xFF, 0xFF
-
-	updateControlRegisters()
 }
 
-func updateControlRegisters() {
+func NewMC6821(name string, startAddress uint16, endAddress uint16) *MC6821 {
+	mc := &MC6821{
+		Name:         name,
+		StartAddress: startAddress,
+		EndAddress:   endAddress,
+		IRA:          0xFF,
+		IRB:          9,
+		CA1:          Rise,
+		CA2:          Rise,
+		CRA:          0,
+		CRB:          0,
+		ORA:          0,
+		ORB:          0,
+		DDRA:         0,
+		DDRB:         0,
+		DDRA_neg:     0xFF,
+		DDRB_neg:     0xFF,
+	}
+
+	mc.updateControlRegisters()
+
+	return mc
+}
+
+func (mc *MC6821) Init() {
+
+	mc.IRA = 0xFF
+	mc.IRB = 0
+
+	mc.CA1, mc.CA2 = Rise, Rise
+
+	mc.CRA, mc.CRB, mc.ORA, mc.ORB = 0, 0, 0, 0
+
+	mc.DDRA, mc.DDRB = 0, 0
+	mc.DDRA_neg, mc.DDRB_neg = 0xFF, 0xFF
+
+	mc.updateControlRegisters()
+}
+
+func (mc *MC6821) updateControlRegisters() {
 
 	// section A -----------------------------------------
-	bCRA_Bit0_EnableIRQA1 = (nCRA & 0x01) == 0x01
-	bCRA_Bit1_CA1_PositiveTrans = (nCRA & 0x02) == 0x02
-	bCRA_Bit2_WritePort = (nCRA & 0x04) == 0x04
-	bCRA_Bit5_OutputMode = (nCRA & 0x20) == 0x20
+	mc.CRA_Bit0_EnableIRQA1 = (mc.CRA & 0x01) == 0x01
+	mc.CRA_Bit1_CA1_PositiveTrans = (mc.CRA & 0x02) == 0x02
+	mc.CRA_Bit2_WritePort = (mc.CRA & 0x04) == 0x04
+	mc.CRA_Bit5_OutputMode = (mc.CRA & 0x20) == 0x20
 
-	bCRA_Bit3_EnableIRQA2 = false
-	bCRA_Bit3_PulseOutput = false
-	bCRA_Bit3_CA2_set_high = false
-	bCRA_Bit4_CA2_PositiveTrans = false
-	bCRA_Bit4_ManualOutput = false
+	mc.CRA_Bit3_EnableIRQA2 = false
+	mc.CRA_Bit3_PulseOutput = false
+	mc.CRA_Bit3_CA2_set_high = false
+	mc.CRA_Bit4_CA2_PositiveTrans = false
+	mc.CRA_Bit4_ManualOutput = false
 
-	if bCRA_Bit5_OutputMode {
-		bCRA_Bit4_ManualOutput = (nCRA & 0x10) == 0x10
-		if bCRA_Bit4_ManualOutput {
-			bCRA_Bit3_CA2_set_high = (nCRA & 0x08) == 0x08
-			if bCRA_Bit3_CA2_set_high {
-				nCA2 = Rise
+	if mc.CRA_Bit5_OutputMode {
+		mc.CRA_Bit4_ManualOutput = (mc.CRA & 0x10) == 0x10
+		if mc.CRA_Bit4_ManualOutput {
+			mc.CRA_Bit3_CA2_set_high = (mc.CRA & 0x08) == 0x08
+			if mc.CRA_Bit3_CA2_set_high {
+				mc.CA2 = Rise
 			} else {
-				nCA2 = Fall
+				mc.CA2 = Fall
 			}
 		} else {
-			bCRA_Bit3_PulseOutput = (nCRA & 0x08) == 0x08
+			mc.CRA_Bit3_PulseOutput = (mc.CRA & 0x08) == 0x08
 		}
 	} else {
-		bCRA_Bit3_EnableIRQA2 = (nCRA & 0x08) == 0x08
-		bCRA_Bit4_CA2_PositiveTrans = (nCRA & 0x10) == 0x10
+		mc.CRA_Bit3_EnableIRQA2 = (mc.CRA & 0x08) == 0x08
+		mc.CRA_Bit4_CA2_PositiveTrans = (mc.CRA & 0x10) == 0x10
 	}
 
 	// section B -----------------------------------------
-	bCRB_Bit0_EnableIRQB1 = (nCRB & 0x01) == 0x01
-	bCRB_Bit1_CB1_PositiveTrans = (nCRB & 0x02) == 0x02
-	bCRB_Bit2_WritePort = (nCRB & 0x04) == 0x04
-	bCRB_Bit5_OutputMode = (nCRB & 0x20) == 0x20
+	mc.CRB_Bit0_EnableIRQB1 = (mc.CRB & 0x01) == 0x01
+	mc.CRB_Bit1_CB1_PositiveTrans = (mc.CRB & 0x02) == 0x02
+	mc.CRB_Bit2_WritePort = (mc.CRB & 0x04) == 0x04
+	mc.CRB_Bit5_OutputMode = (mc.CRB & 0x20) == 0x20
 
-	bCRB_Bit3_EnableIRQB2 = false
-	bCRB_Bit3_PulseOutput = false
-	bCRB_Bit3_CB2_set_high = false
-	bCRB_Bit4_CB2_PositiveTrans = false
-	bCRB_Bit4_ManualOutput = false
+	mc.CRB_Bit3_EnableIRQB2 = false
+	mc.CRB_Bit3_PulseOutput = false
+	mc.CRB_Bit3_CB2_set_high = false
+	mc.CRB_Bit4_CB2_PositiveTrans = false
+	mc.CRB_Bit4_ManualOutput = false
 
-	if bCRB_Bit5_OutputMode {
-		bCRB_Bit4_ManualOutput = (nCRB & 0x10) == 0x10
-		if bCRB_Bit4_ManualOutput {
-			bCRB_Bit3_CB2_set_high = (nCRB & 0x08) == 0x08
-			if bCRB_Bit3_CB2_set_high {
-				nCB2 = Rise
+	if mc.CRB_Bit5_OutputMode {
+		mc.CRB_Bit4_ManualOutput = (mc.CRB & 0x10) == 0x10
+		if mc.CRB_Bit4_ManualOutput {
+			mc.CRB_Bit3_CB2_set_high = (mc.CRB & 0x08) == 0x08
+			if mc.CRB_Bit3_CB2_set_high {
+				mc.CB2 = Rise
 			} else {
-				nCB2 = Fall
+				mc.CB2 = Fall
 			}
 		} else {
-			bCRB_Bit3_PulseOutput = (nCRB & 0x08) == 0x08
+			mc.CRB_Bit3_PulseOutput = (mc.CRB & 0x08) == 0x08
 		}
 
 	} else {
-		bCRB_Bit3_EnableIRQB2 = (nCRB & 0x08) == 0x08
-		bCRB_Bit4_CB2_PositiveTrans = (nCRB & 0x10) == 0x10
+		mc.CRB_Bit3_EnableIRQB2 = (mc.CRB & 0x08) == 0x08
+		mc.CRB_Bit4_CB2_PositiveTrans = (mc.CRB & 0x10) == 0x10
 	}
 }
 
-func updateIRQ() {
-	if (bCRA_Bit0_EnableIRQA1 && (nCRA&0x80) == 0x80) ||
-		(bCRA_Bit3_EnableIRQA2 && (nCRA&0x40) == 0x40) ||
-		(bCRB_Bit0_EnableIRQB1 && (nCRB&0x80) == 0x80) ||
-		(bCRB_Bit3_EnableIRQB2 && (nCRB&0x40) == 0x40) {
+func (mc *MC6821) updateIRQ() {
+	if (mc.CRA_Bit0_EnableIRQA1 && (mc.CRA&0x80) == 0x80) ||
+		(mc.CRA_Bit3_EnableIRQA2 && (mc.CRA&0x40) == 0x40) ||
+		(mc.CRB_Bit0_EnableIRQB1 && (mc.CRB&0x80) == 0x80) ||
+		(mc.CRB_Bit3_EnableIRQB2 && (mc.CRB&0x40) == 0x40) {
 
 		// non blocking send
 		select {
-		case sendInterrupt <- IRQ:
+		case mc.sendInterrupt <- IRQ:
 		default:
 		}
 	}
 }
 
-func CpuRead(addr uint16) byte {
+func (mc *MC6821) CpuRead(addr uint16) byte {
 	var reg = addr & 0x03
 	var data byte = 0
 	switch reg {
 
 	case 0: // PA
 
-		nCRA &= 0x3F // IRQ flags implicitly cleared by a read
+		mc.CRA &= 0x3F // IRQ flags implicitly cleared by a read
 
 		// mix input and output
-		data |= nORA & nDDRA
-		data |= nIRA & nDDRA_neg
+		data |= mc.ORA & mc.DDRA
+		data |= mc.IRA & mc.DDRA_neg
 
 	case 1: // CRA
-		data = nCRA
+		data = mc.CRA
 
 	case 2: // PB
 
-		nCRB &= 0x3F // IRQ flags implicitly cleared by a read
+		mc.CRB &= 0x3F // IRQ flags implicitly cleared by a read
 
 		// mix input and output
-		data |= nORB & nDDRB
-		data |= nIRB & nDDRB_neg
+		data |= mc.ORB & mc.DDRB
+		data |= mc.IRB & mc.DDRB_neg
 
 	case 3: // CRB
-		data = nCRB
+		data = mc.CRB
 	}
 
 	return data
 }
 
-func CpuWrite(addr uint16, data byte) {
+func (mc *MC6821) CpuWrite(addr uint16, data byte) {
 	var reg = addr & 0x03
 
 	switch reg {
 	case 0: // DDRA / PA
-		if bCRA_Bit2_WritePort {
-			nORA = data // into output register A
+		if mc.CRA_Bit2_WritePort {
+			mc.ORA = data // into output register A
 			// mix input and output
 			var bOut byte = 0
-			bOut |= nORA & nDDRA
-			bOut |= nIRA & nDDRA_neg
+			bOut |= mc.ORA & mc.DDRA
+			bOut |= mc.IRA & mc.DDRA_neg
 			// non blocking send
 			select {
-			case sendOutputA <- bOut:
+			case mc.sendOutputA <- bOut:
 			default:
 			}
 		} else {
-			nDDRA = data // into data direction register A
-			nDDRA_neg = ^data
+			mc.DDRA = data // into data direction register A
+			mc.DDRA_neg = ^data
 		}
 
 	case 1: // CRA
-		nCRA = (nCRA & 0xC0) | (data & 0x3F) // do not change IRQ flags
-		updateControlRegisters()
-		updateIRQ()
+		mc.CRA = (mc.CRA & 0xC0) | (data & 0x3F) // do not change IRQ flags
+		mc.updateControlRegisters()
+		mc.updateIRQ()
 
 	case 2: // DDRB / PB
-		if bCRB_Bit2_WritePort {
-			nORB = data // into output register B
+		if mc.CRB_Bit2_WritePort {
+			mc.ORB = data // into output register B
 			// mix input and output
 			var bOut byte = 0
-			bOut |= nORB & nDDRB
-			bOut |= nIRB & nDDRB_neg
+			bOut |= mc.ORB & mc.DDRB
+			bOut |= mc.IRB & mc.DDRB_neg
 			// non blocking send
 			select {
-			case sendOutputB <- bOut:
+			case mc.sendOutputB <- bOut:
 			default:
 			}
 
-			if bCRB_Bit5_OutputMode && !bCRB_Bit4_ManualOutput { // handshake on write mode
-				nCB2 = Fall
-				if bCRB_Bit3_PulseOutput {
-					nCB2 = Rise
+			if mc.CRB_Bit5_OutputMode && !mc.CRB_Bit4_ManualOutput { // handshake on write mode
+				mc.CB2 = Fall
+				if mc.CRB_Bit3_PulseOutput {
+					mc.CB2 = Rise
 				}
 			}
 		} else {
-			nDDRB = data // into data direction register B
-			nDDRB_neg = ^data
+			mc.DDRB = data // into data direction register B
+			mc.DDRB_neg = ^data
 		}
 
 	case 3: // CRB
-		nCRB = (nCRB & 0xC0) | (data & 0x3F) // do not change IRQ flags
-		updateControlRegisters()
-		updateIRQ()
+		mc.CRB = (mc.CRB & 0xC0) | (data & 0x3F) // do not change IRQ flags
+		mc.updateControlRegisters()
+		mc.updateIRQ()
 	}
 }
 
-// output channel A handling
+// input channel A handling
 
-func SetInputChannelA(ch <-chan byte) {
-	receiveInputA = ch
-	go receiveFromInputA()
+func (mc *MC6821) SetInputChannelA(ch <-chan byte) {
+	mc.receiveInputA = ch
+	go mc.receiveFromInputA()
 }
 
-func receiveFromInputA() {
-	for b := range receiveInputA {
-		nIRA = b
+func (mc *MC6821) receiveFromInputA() {
+	for b := range mc.receiveInputA {
+		mc.IRA = b
 	}
 }
 
-// output channel B handling
+// input channel B handling
 
-func SetInputChannelB(ch <-chan byte) {
-	receiveInputB = ch
-	go receiveFromInputB()
+func (mc *MC6821) SetInputChannelB(ch <-chan byte) {
+	mc.receiveInputB = ch
+	go mc.receiveFromInputB()
 }
 
-func receiveFromInputB() {
-	for b := range receiveInputB {
-		nIRB = b
+func (mc *MC6821) receiveFromInputB() {
+	for b := range mc.receiveInputB {
+		mc.IRB = b
 	}
 }
 
 // output channel handling
 
-func SetOutputChannelA(ch chan<- byte) {
-	sendOutputA = ch
+func (mc *MC6821) SetOutputChannelA(ch chan<- byte) {
+	mc.sendOutputA = ch
 }
 
-func SetOutputChannelB(ch chan<- byte) {
-	sendOutputB = ch
+func (mc *MC6821) SetOutputChannelB(ch chan<- byte) {
+	mc.sendOutputB = ch
 }
 
-func SetInterruptChannelB(ch chan<- InteruptSignal) {
-	sendInterrupt = ch
+func (mc *MC6821) SetInterruptChannelB(ch chan<- InteruptSignal) {
+	mc.sendInterrupt = ch
 }
 
 // control A1 handling
 
-func setCA1(b Signal) {
+func (mc *MC6821) setCA1(b Signal) {
 
 	var condition Signal
 
-	if bCRA_Bit1_CA1_PositiveTrans {
+	if mc.CRA_Bit1_CA1_PositiveTrans {
 		condition = Rise
 	} else {
 		condition = Fall
 	}
 
-	if nCA1 != b && condition == b {
-		nCRA |= 0x80 // set bit 7 IRQA1
-		updateIRQ()
-		if bCRA_Bit5_OutputMode && !bCRA_Bit4_ManualOutput && !bCRA_Bit3_PulseOutput { // handshake mode
-			nCA2 = Rise
+	if mc.CA1 != b && condition == b {
+		mc.CRA |= 0x80 // set bit 7 IRQA1
+		mc.updateIRQ()
+		if mc.CRA_Bit5_OutputMode && !mc.CRA_Bit4_ManualOutput && !mc.CRA_Bit3_PulseOutput { // handshake mode
+			mc.CA2 = Rise
 		}
 	}
 
-	nCA1 = b
+	mc.CA1 = b
 }
 
-func SetCA1Channel(ch <-chan Signal) {
-	receiveCA1 = ch
-	go receiveFromCA1()
+func (mc *MC6821) SetCA1Channel(ch <-chan Signal) {
+	mc.receiveCA1 = ch
+	go mc.receiveFromCA1()
 }
 
-func receiveFromCA1() {
-	for s := range receiveCA1 {
-		setCA1(s)
+func (mc *MC6821) receiveFromCA1() {
+	for s := range mc.receiveCA1 {
+		mc.setCA1(s)
 	}
 }
 
 // control A2 handling
 
-func setCA2(b Signal) {
+func (mc *MC6821) setCA2(b Signal) {
 
 	var condition Signal
 
-	if bCRA_Bit4_CA2_PositiveTrans {
+	if mc.CRA_Bit4_CA2_PositiveTrans {
 		condition = Rise
 	} else {
 		condition = Fall
 	}
 
-	if nCA2 != b && condition == b {
-		nCRA |= 0x40 // set bit 6 IRQA2
-		updateIRQ()
+	if mc.CA2 != b && condition == b {
+		mc.CRA |= 0x40 // set bit 6 IRQA2
+		mc.updateIRQ()
 	}
 
-	nCA2 = b
+	mc.CA2 = b
 }
 
-func SetCA2Channel(ch <-chan Signal) {
-	receiveCA2 = ch
-	go receiveFromCA2()
+func (mc *MC6821) SetCA2Channel(ch <-chan Signal) {
+	mc.receiveCA2 = ch
+	go mc.receiveFromCA2()
 }
 
-func receiveFromCA2() {
-	for s := range receiveCA2 {
-		setCA2(s)
+func (mc *MC6821) receiveFromCA2() {
+	for s := range mc.receiveCA2 {
+		mc.setCA2(s)
 	}
 }
 
 // control B1 handling
 
-func setCB1(b Signal) {
+func (mc *MC6821) setCB1(b Signal) {
 
 	var condition Signal
 
-	if bCRB_Bit1_CB1_PositiveTrans {
+	if mc.CRB_Bit1_CB1_PositiveTrans {
 		condition = Rise
 	} else {
 		condition = Fall
 	}
 
-	if nCB1 != b && condition == b {
-		nCRB |= 0x80 // set bit 7 IRQB1
-		updateIRQ()
-		if bCRB_Bit5_OutputMode && !bCRB_Bit4_ManualOutput && !bCRB_Bit3_PulseOutput { // handshake mode
-			nCB2 = Rise
+	if mc.CB1 != b && condition == b {
+		mc.CRB |= 0x80 // set bit 7 IRQB1
+		mc.updateIRQ()
+		if mc.CRB_Bit5_OutputMode && !mc.CRB_Bit4_ManualOutput && !mc.CRB_Bit3_PulseOutput { // handshake mode
+			mc.CB2 = Rise
 		}
 	}
 
-	nCB1 = b
+	mc.CB1 = b
 }
 
-func SetCB1Channel(ch <-chan Signal) {
-	receiveCB1 = ch
-	go receiveFromCB1()
+func (mc *MC6821) SetCB1Channel(ch <-chan Signal) {
+	mc.receiveCB1 = ch
+	go mc.receiveFromCB1()
 }
 
-func receiveFromCB1() {
-	for s := range receiveCB1 {
-		setCB1(s)
+func (mc *MC6821) receiveFromCB1() {
+	for s := range mc.receiveCB1 {
+		mc.setCB1(s)
 	}
 }
 
 // control B2 handling
 
-func setCB2(b Signal) {
+func (mc *MC6821) setCB2(b Signal) {
 
 	var condition Signal
 
-	if bCRB_Bit4_CB2_PositiveTrans {
+	if mc.CRB_Bit4_CB2_PositiveTrans {
 		condition = Rise
 	} else {
 		condition = Fall
 	}
 
-	if nCB2 != b && condition == b {
-		nCRB |= 0x40 // set bit 6 IRQB2
-		updateIRQ()
+	if mc.CB2 != b && condition == b {
+		mc.CRB |= 0x40 // set bit 6 IRQB2
+		mc.updateIRQ()
 	}
 
-	nCB2 = b
+	mc.CB2 = b
 }
 
-func SetCB2Channel(ch <-chan Signal) {
-	receiveCB2 = ch
-	go receiveFromCB2()
+func (mc *MC6821) SetCB2Channel(ch <-chan Signal) {
+	mc.receiveCB2 = ch
+	go mc.receiveFromCB2()
 }
 
-func receiveFromCB2() {
-	for s := range receiveCB2 {
-		setCB2(s)
+func (mc *MC6821) receiveFromCB2() {
+	for s := range mc.receiveCB2 {
+		mc.setCB2(s)
 	}
 }
