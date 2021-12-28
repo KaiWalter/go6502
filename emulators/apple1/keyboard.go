@@ -11,7 +11,21 @@ var (
 
 func initKeyboardMapping() {
 
-	keymapping = make(map[sdl.Keycode]uint8)
+	keymapping = map[sdl.Keycode]uint8{
+		0x08: 0x08,
+		0x0D: 0x0D,
+		0x20: 0x20,
+
+		'*': 0x2A,
+		'/': 0x2B,
+		'+': 0x2F,
+		'-': 0x2D,
+
+		'.': 0x2E,
+		',': 0x2C,
+		':': ':',
+	}
+
 	// map characters A-Z
 	for i := sdl.Keycode(0x61); i <= 0x7a; i++ {
 		keymapping[i] = uint8(i - 0x20)

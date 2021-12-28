@@ -101,10 +101,15 @@ func renderCharacter(x uint8, y uint8, charno uint8, bInvert bool) {
 		}
 	}
 
-	renderer.SetDrawColor(98, 143, 0, 255)
-	renderer.FillRects(rects_on)
-	renderer.SetDrawColor(0, 0, 0, 255)
-	renderer.FillRects(rects_off)
+	if len(rects_on) > 0 {
+		renderer.SetDrawColor(98, 143, 0, 255)
+		renderer.FillRects(rects_on)
+
+	}
+	if len(rects_off) > 0 {
+		renderer.SetDrawColor(0, 0, 0, 255)
+		renderer.FillRects(rects_off)
+	}
 
 	renderer.Present()
 }
