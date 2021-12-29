@@ -20,6 +20,7 @@ type MC6821 struct {
 	Name         string
 	StartAddress uint16
 	EndAddress   uint16
+	initialized  bool
 
 	ORA      byte   // Output register A
 	IRA      byte   // Input register A
@@ -69,31 +70,7 @@ type MC6821 struct {
 	receiveCB2    <-chan Signal
 }
 
-func NewMC6821(name string, startAddress uint16, endAddress uint16) *MC6821 {
-	mc := &MC6821{
-		Name:         name,
-		StartAddress: startAddress,
-		EndAddress:   endAddress,
-		IRA:          0xFF,
-		IRB:          9,
-		CA1:          Rise,
-		CA2:          Rise,
-		CRA:          0,
-		CRB:          0,
-		ORA:          0,
-		ORB:          0,
-		DDRA:         0,
-		DDRB:         0,
-		DDRA_neg:     0xFF,
-		DDRB_neg:     0xFF,
-	}
-
-	mc.updateControlRegisters()
-
-	return mc
-}
-
-func (mc *MC6821) Init() {
+func (mc *MC6821) init() {
 
 	mc.IRA = 0xFF
 	mc.IRB = 0
@@ -106,6 +83,8 @@ func (mc *MC6821) Init() {
 	mc.DDRA_neg, mc.DDRB_neg = 0xFF, 0xFF
 
 	mc.updateControlRegisters()
+
+	mc.initialized = true
 }
 
 func (mc *MC6821) updateControlRegisters() {
@@ -275,6 +254,10 @@ func (mc *MC6821) CpuWrite(addr uint16, data byte) {
 // input channel A handling
 
 func (mc *MC6821) SetInputChannelA(ch <-chan byte) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.receiveInputA = ch
 	go mc.receiveFromInputA()
 }
@@ -288,6 +271,10 @@ func (mc *MC6821) receiveFromInputA() {
 // input channel B handling
 
 func (mc *MC6821) SetInputChannelB(ch <-chan byte) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.receiveInputB = ch
 	go mc.receiveFromInputB()
 }
@@ -301,14 +288,26 @@ func (mc *MC6821) receiveFromInputB() {
 // output channel handling
 
 func (mc *MC6821) SetOutputChannelA(ch chan<- byte) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.sendOutputA = ch
 }
 
 func (mc *MC6821) SetOutputChannelB(ch chan<- byte) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.sendOutputB = ch
 }
 
 func (mc *MC6821) SetInterruptChannelB(ch chan<- InteruptSignal) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.sendInterrupt = ch
 }
 
@@ -336,6 +335,10 @@ func (mc *MC6821) setCA1(b Signal) {
 }
 
 func (mc *MC6821) SetCA1Channel(ch <-chan Signal) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.receiveCA1 = ch
 	go mc.receiveFromCA1()
 }
@@ -367,6 +370,10 @@ func (mc *MC6821) setCA2(b Signal) {
 }
 
 func (mc *MC6821) SetCA2Channel(ch <-chan Signal) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.receiveCA2 = ch
 	go mc.receiveFromCA2()
 }
@@ -401,6 +408,10 @@ func (mc *MC6821) setCB1(b Signal) {
 }
 
 func (mc *MC6821) SetCB1Channel(ch <-chan Signal) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.receiveCB1 = ch
 	go mc.receiveFromCB1()
 }
@@ -432,6 +443,10 @@ func (mc *MC6821) setCB2(b Signal) {
 }
 
 func (mc *MC6821) SetCB2Channel(ch <-chan Signal) {
+	if !mc.initialized {
+		mc.init()
+	}
+
 	mc.receiveCB2 = ch
 	go mc.receiveFromCB2()
 }

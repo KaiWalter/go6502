@@ -24,7 +24,7 @@ import (
 var (
 	ram []byte
 
-	pia *mc6821.MC6821
+	pia = mc6821.MC6821{Name: "Apple1_PIA", StartAddress: 0xD010, EndAddress: 0xD01F}
 
 	screenOutputChannel   chan byte
 	keyboardInputChannelA chan byte
@@ -50,7 +50,6 @@ func Run() {
 	loadROMToAddress("./roms/Apple1_basic.rom", 0xE000)
 
 	// wire up PIA with screen output and keyboard input
-	pia = mc6821.NewMC6821("Apple1_PIA", 0xD010, 0xD01F)
 	screenOutputChannel = make(chan byte, 10)
 	pia.SetOutputChannelB(screenOutputChannel)
 	go receiveOutput()
