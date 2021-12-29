@@ -13,6 +13,7 @@ package apple1
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -101,11 +102,11 @@ func retrieveROM(filename string) ([]byte, error) {
 }
 
 func loadROMToAddress(filename string, addr uint16) {
-	fmt.Printf("loading ROM %v to %x...\n", filename, addr)
+	log.Printf("loading ROM %v to %x...", filename, addr)
 
 	rom, err := retrieveROM(filename)
 	if err != nil {
-		fmt.Printf("could not retrieve ROM: %v\n", err)
+		log.Printf("could not retrieve ROM: %v", err)
 		return
 	}
 
@@ -138,30 +139,23 @@ func mainLoop() {
 			case *sdl.QuitEvent:
 				running = false
 			case *sdl.KeyboardEvent:
-				// fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tmodifiers:%d\tstate:%d\trepeat:%d\n",
-				// 	t.Timestamp, t.Type, t.Keysym.Sym, t.Keysym.Mod, t.State, t.Repeat)
 				if t.State == 0 {
 					handleKeypressed(t.Keysym)
 				}
 			}
 		}
 
-		// TO DO https://floooh.github.io/2019/12/13/cycle-stepped-6502.html
+		if running {
 
-		// if mos6502.CyclesCompleted() {
-		// 	fmt.Printf("Current PC %x PC %x\n", mos6502.CurrentPC, mos6502.PC)
-		// 	if mos6502.PC == 0xfff4 {
-		// 		fmt.Println("SEND TO DISPLAY!")
-		// 	}
-		// }
+			err := mos6502.Cycle()
+			if err != nil {
+				log.Printf("CPU processing failed %v", err)
+				break
+			}
 
-		err := mos6502.Cycle()
-		if err != nil {
-			fmt.Printf("CPU processing failed %v\n", err)
-			break
+			time.Sleep(5 * time.Millisecond)
+
 		}
-
-		time.Sleep(5 * time.Millisecond)
 
 	}
 }
