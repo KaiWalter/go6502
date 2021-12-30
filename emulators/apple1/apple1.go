@@ -13,6 +13,7 @@ package apple1
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -21,13 +22,10 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const (
-	piaStartAddress uint16 = 0xD010
-	piaEndAddress   uint16 = 0xD01F
-)
-
 var (
 	ram []byte
+
+	pia = mc6821.MC6821{Name: "Apple1_PIA", StartAddress: 0xD010, EndAddress: 0xD01F}
 
 	screenOutputChannel   chan byte
 	keyboardInputChannelA chan byte
@@ -42,6 +40,32 @@ func init() {
 	for i := 0; i < len(ram); i++ {
 		ram[i] = 0x00
 	}
+}
+
+func Run() {
+	initScreen()
+	defer destroyScreen()
+
+	// load ROMs
+	loadROMToAddress("./roms/Apple1_HexMonitor.rom", 0xFF00)
+	loadROMToAddress("./roms/Apple1_basic.rom", 0xE000)
+
+	// wire up PIA with screen output and keyboard input
+	screenOutputChannel = make(chan byte, 10)
+	pia.SetOutputChannelB(screenOutputChannel)
+	go receiveOutput()
+
+	keyboardInputChannelA = make(chan byte, 10)
+	pia.SetInputChannelA(keyboardInputChannelA)
+
+	piaCA1Channel = make(chan mc6821.Signal, 10)
+	pia.SetCA1Channel(piaCA1Channel)
+
+	// init 6502
+	mos6502.Init(readMemory, writeMemory)
+	waitForSystemResetCycles()
+
+	mainLoop()
 }
 
 // wait for system reset cycles
@@ -78,11 +102,11 @@ func retrieveROM(filename string) ([]byte, error) {
 }
 
 func loadROMToAddress(filename string, addr uint16) {
-	fmt.Printf("loading ROM %v to %x...\n", filename, addr)
+	log.Printf("loading ROM %v to %x...", filename, addr)
 
 	rom, err := retrieveROM(filename)
 	if err != nil {
-		fmt.Printf("could not retrieve ROM: %v\n", err)
+		log.Printf("could not retrieve ROM: %v", err)
 		return
 	}
 
@@ -91,46 +115,19 @@ func loadROMToAddress(filename string, addr uint16) {
 	}
 }
 
-func Run() {
-	initScreen()
-	defer destroyScreen()
-
-	// load ROMs
-	loadROMToAddress("./roms/Apple1_HexMonitor.rom", 0xFF00)
-	loadROMToAddress("./roms/Apple1_basic.rom", 0xE000)
-
-	// emulate address bus
-	testRead := func(addr uint16) byte {
-		if addr >= piaStartAddress && addr <= piaEndAddress {
-			return mc6821.CpuRead(addr)
-		}
-		return ram[addr]
+func readMemory(addr uint16) byte {
+	if addr >= pia.StartAddress && addr <= pia.EndAddress {
+		return pia.CpuRead(addr)
 	}
+	return ram[addr]
+}
 
-	testWrite := func(addr uint16, data byte) {
-		if addr >= piaStartAddress && addr <= piaEndAddress {
-			mc6821.CpuWrite(addr, data)
-		} else {
-			ram[addr] = data
-		}
+func writeMemory(addr uint16, data byte) {
+	if addr >= pia.StartAddress && addr <= pia.EndAddress {
+		pia.CpuWrite(addr, data)
+	} else {
+		ram[addr] = data
 	}
-
-	// wire up PIA with screen output and keyboard input
-	screenOutputChannel = make(chan byte, 10)
-	mc6821.SetOutputChannelB(screenOutputChannel)
-	go receiveOutput()
-
-	keyboardInputChannelA = make(chan byte, 10)
-	mc6821.SetInputChannelA(keyboardInputChannelA)
-
-	piaCA1Channel = make(chan mc6821.Signal, 10)
-	mc6821.SetCA1Channel(piaCA1Channel)
-
-	// init 6502
-	mos6502.Init(testRead, testWrite)
-	waitForSystemResetCycles()
-
-	mainLoop()
 }
 
 func mainLoop() {
@@ -142,30 +139,23 @@ func mainLoop() {
 			case *sdl.QuitEvent:
 				running = false
 			case *sdl.KeyboardEvent:
-				// fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tmodifiers:%d\tstate:%d\trepeat:%d\n",
-				// 	t.Timestamp, t.Type, t.Keysym.Sym, t.Keysym.Mod, t.State, t.Repeat)
 				if t.State == 0 {
 					handleKeypressed(t.Keysym)
 				}
 			}
 		}
 
-		// TO DO https://floooh.github.io/2019/12/13/cycle-stepped-6502.html
+		if running {
 
-		// if mos6502.CyclesCompleted() {
-		// 	fmt.Printf("Current PC %x PC %x\n", mos6502.CurrentPC, mos6502.PC)
-		// 	if mos6502.PC == 0xfff4 {
-		// 		fmt.Println("SEND TO DISPLAY!")
-		// 	}
-		// }
+			err := mos6502.Cycle()
+			if err != nil {
+				log.Printf("CPU processing failed %v", err)
+				break
+			}
 
-		err := mos6502.Cycle()
-		if err != nil {
-			fmt.Printf("CPU processing failed %v\n", err)
-			break
+			time.Sleep(5 * time.Millisecond)
+
 		}
-
-		time.Sleep(5 * time.Millisecond)
 
 	}
 }

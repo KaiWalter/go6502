@@ -19,7 +19,7 @@ func Test_LDA_IMM_STA_ZP(t *testing.T) {
 	testValue := byte(0x42)
 	//   lda #$testValue
 	//   sta $0
-	ram := [...]byte{0x00, 0xA9, testValue, 0x85, 0x00}
+	ram := [0x10000]byte{0x00, 0xA9, testValue, 0x85, 0x00}
 
 	testRead := func(addr uint16) byte {
 		return ram[addr]
@@ -34,7 +34,7 @@ func Test_LDA_IMM_STA_ZP(t *testing.T) {
 	PC = 1
 
 	// act
-	for int(PC) < len(ram) {
+	for int(PC) < 5 {
 		err := Cycle()
 		if err != nil {
 			t.Errorf("CPU processing failed %v", err)
@@ -55,7 +55,7 @@ func Test_LDA_IMM_STA_ABS(t *testing.T) {
 	testValue := byte(0x42)
 	//   lda #$testValue
 	//   sta $0
-	ram := [...]byte{0x00, 0xA9, testValue, 0x8D, 0x00, 0x00}
+	ram := [0x10000]byte{0x00, 0xA9, testValue, 0x8D, 0x00, 0x00}
 
 	testRead := func(addr uint16) byte {
 		return ram[addr]
@@ -70,7 +70,7 @@ func Test_LDA_IMM_STA_ABS(t *testing.T) {
 	PC = 1
 
 	// act
-	for int(PC) < len(ram) {
+	for int(PC) < 6 {
 		err := Cycle()
 		if err != nil {
 			t.Errorf("CPU processing failed %v", err)
@@ -93,7 +93,7 @@ func Test_Dec_SBC(t *testing.T) {
 	// LDA $90
 	// SBC $00
 	// CMP $89
-	ram := [...]byte{0x90, 0x00, 0x89, 0x18, 0xF8, 0xA5, 0x00, 0xE5, 0x01, 0xC5, 0x03}
+	ram := [0x10000]byte{0x90, 0x00, 0x89, 0x18, 0xF8, 0xA5, 0x00, 0xE5, 0x01, 0xC5, 0x03}
 
 	testRead := func(addr uint16) byte {
 		return ram[addr]
@@ -108,7 +108,7 @@ func Test_Dec_SBC(t *testing.T) {
 	PC = 3
 
 	// act
-	for int(PC) < len(ram) {
+	for int(PC) < 11 {
 		err := Cycle()
 		if err != nil {
 			t.Errorf("CPU processing failed %v", err)
