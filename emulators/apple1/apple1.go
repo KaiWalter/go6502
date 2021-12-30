@@ -17,13 +17,20 @@ import (
 	"os"
 	"time"
 
+	"github.com/KaiWalter/go6502/pkg/addressbus"
 	"github.com/KaiWalter/go6502/pkg/mc6821"
+	"github.com/KaiWalter/go6502/pkg/memory"
 	"github.com/KaiWalter/go6502/pkg/mos6502"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const (
+	addressMapBlockSize = 0x400 // 1kb
+)
+
 var (
-	ram []byte
+	ram  = memory.Memory{AddressOffset: 0, AddressSpace: make([]byte, 4*1024)}
+	roms = []memory.Memory{}
 
 	pia = mc6821.MC6821{Name: "Apple1_PIA", StartAddress: 0xD010, EndAddress: 0xD01F}
 
@@ -36,21 +43,21 @@ func init() {
 
 	initKeyboardMapping()
 
-	ram = make([]byte, 64*1024)
-	for i := 0; i < len(ram); i++ {
-		ram[i] = 0x00
-	}
+	addressbus.InitBus(addressMapBlockSize)
+	addressbus.RegisterComponent(0, ram.Size()/addressMapBlockSize, &ram)
+
+	// load ROMs
+	loadROM("./roms/Apple1_HexMonitor.rom", 0xFF00)
+	loadROM("./roms/Apple1_basic.rom", 0xE000)
+
 }
 
 func Run() {
 	initScreen()
 	defer destroyScreen()
 
-	// load ROMs
-	loadROMToAddress("./roms/Apple1_HexMonitor.rom", 0xFF00)
-	loadROMToAddress("./roms/Apple1_basic.rom", 0xE000)
-
 	// wire up PIA with screen output and keyboard input
+	addressbus.RegisterComponent(int(pia.StartAddress), int(pia.EndAddress), &pia)
 	screenOutputChannel = make(chan byte, 10)
 	pia.SetOutputChannelB(screenOutputChannel)
 	go receiveOutput()
@@ -62,7 +69,7 @@ func Run() {
 	pia.SetCA1Channel(piaCA1Channel)
 
 	// init 6502
-	mos6502.Init(readMemory, writeMemory)
+	mos6502.Reset()
 	waitForSystemResetCycles()
 
 	mainLoop()
@@ -101,33 +108,24 @@ func retrieveROM(filename string) ([]byte, error) {
 	return buffer, err
 }
 
-func loadROMToAddress(filename string, addr uint16) {
+func loadROM(filename string, addr uint16) {
 	log.Printf("loading ROM %v to %x...", filename, addr)
 
-	rom, err := retrieveROM(filename)
+	romContent, err := retrieveROM(filename)
 	if err != nil {
 		log.Printf("could not retrieve ROM: %v", err)
 		return
 	}
 
-	for i := 0; i < len(rom); i++ {
-		ram[addr+uint16(i)] = rom[i]
+	if len(romContent) == 0 {
+		log.Printf("not content in ROM file")
+		return
 	}
-}
 
-func readMemory(addr uint16) byte {
-	if addr >= pia.StartAddress && addr <= pia.EndAddress {
-		return pia.CpuRead(addr)
-	}
-	return ram[addr]
-}
+	rom := &memory.Memory{AddressOffset: addr, AddressSpace: romContent}
+	addressbus.RegisterComponent(int(addr), int(addr)+len(romContent)-1, rom)
 
-func writeMemory(addr uint16, data byte) {
-	if addr >= pia.StartAddress && addr <= pia.EndAddress {
-		pia.CpuWrite(addr, data)
-	} else {
-		ram[addr] = data
-	}
+	roms = append(roms, *rom)
 }
 
 func mainLoop() {

@@ -2,6 +2,9 @@ package mos6502
 
 import (
 	"testing"
+
+	"github.com/KaiWalter/go6502/pkg/addressbus"
+	"github.com/KaiWalter/go6502/pkg/memory"
 )
 
 const (
@@ -12,25 +15,21 @@ const (
 func TestDecimal(t *testing.T) {
 
 	// arrange
-	ram, err := RetrieveROM("6502_decimal_test.bin")
+	ramContent, err := RetrieveROM("6502_decimal_test.bin")
 	if err != nil {
 		t.Errorf("could not retrieve ROM: %v", err)
 	}
 
-	testRead := func(addr uint16) byte {
-		return ram[addr]
-	}
-
-	testWrite := func(addr uint16, data byte) {
-		ram[addr] = data
-	}
-
 	for i := 0; i < 0x1FF; i++ {
-		ram[i+0x200] = ram[i]
-		ram[i] = 0
+		ramContent[i+0x200] = ramContent[i]
+		ramContent[i] = 0
 	}
 
-	Init(testRead, testWrite)
+	ram := memory.Memory{AddressOffset: 0, AddressSpace: ramContent[:]}
+	addressbus.InitBus(0x4000)
+	addressbus.RegisterComponent(0, len(ramContent)-1, &ram)
+
+	Init()
 	WaitForSystemResetCycles()
 	PC = 0x200
 
@@ -60,7 +59,7 @@ func TestDecimal(t *testing.T) {
 	}
 
 	// assert
-	if ram[resultDecimalTest] != 0 {
-		t.Errorf("failed - value actual %x / 0 expected", ram[resultDecimalTest])
+	if ramContent[resultDecimalTest] != 0 {
+		t.Errorf("failed - value actual %x / 0 expected", ramContent[resultDecimalTest])
 	}
 }
