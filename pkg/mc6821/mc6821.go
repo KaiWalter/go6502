@@ -163,7 +163,7 @@ func (mc *MC6821) updateIRQ() {
 	}
 }
 
-func (mc *MC6821) CpuRead(addr uint16) byte {
+func (mc *MC6821) Read(addr uint16) byte {
 	var reg = addr & 0x03
 	var data byte = 0
 	switch reg {
@@ -194,7 +194,7 @@ func (mc *MC6821) CpuRead(addr uint16) byte {
 	return data
 }
 
-func (mc *MC6821) CpuWrite(addr uint16, data byte) {
+func (mc *MC6821) Write(addr uint16, data byte) {
 	var reg = addr & 0x03
 
 	switch reg {

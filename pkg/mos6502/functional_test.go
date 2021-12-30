@@ -2,6 +2,9 @@ package mos6502
 
 import (
 	"testing"
+
+	"github.com/KaiWalter/go6502/pkg/addressbus"
+	"github.com/KaiWalter/go6502/pkg/memory"
 )
 
 const (
@@ -11,20 +14,16 @@ const (
 func TestFunctional(t *testing.T) {
 
 	// arrange
-	ram, err := RetrieveROM("6502_functional_test.bin")
+	ramContent, err := RetrieveROM("6502_functional_test.bin")
 	if err != nil {
 		t.Errorf("could not retrieve ROM: %v", err)
 	}
 
-	testRead := func(addr uint16) byte {
-		return ram[addr]
-	}
+	ram := memory.Memory{AddressOffset: 0, AddressSpace: ramContent[:]}
+	bus := addressbus.SimpleBus{}
+	bus.InitBus(&ram)
 
-	testWrite := func(addr uint16, data byte) {
-		ram[addr] = data
-	}
-
-	Init(testRead, testWrite)
+	Init(&bus)
 	WaitForSystemResetCycles()
 	PC = 0x400
 

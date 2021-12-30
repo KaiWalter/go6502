@@ -2,6 +2,9 @@ package mos6502
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/KaiWalter/go6502/pkg/addressbus"
 )
 
 // adressModeFunc defines a function executing the adress mode of an operation
@@ -36,18 +39,9 @@ var operations = [...]operationDefinition{
 	{"BEQ", BEQ, REL, 2}, {"SBC", SBC, IZY, 5}, {"???", XXX, IMP, 2}, {"???", XXX, IMP, 8}, {"???", NOP, IMP, 4}, {"SBC", SBC, ZPX, 4}, {"INC", INC, ZPX, 6}, {"???", XXX, IMP, 6}, {"SED", SED, IMP, 2}, {"SBC", SBC, ABY, 4}, {"NOP", NOP, IMP, 2}, {"???", XXX, IMP, 7}, {"???", NOP, IMP, 4}, {"SBC", SBC, ABX, 4}, {"INC", INC, ABX, 7}, {"???", XXX, IMP, 7},
 }
 
-// ReadFunc defines a function where the CPU can read from RAM or Bus
-type ReadFunc func(uint16) byte
-
-// WriteFunc defines a function where the CPU can write to RAM or Bus
-type WriteFunc func(uint16, byte)
-
 var (
-	// read points to a function where the CPU can read from RAM or Bus
-	read ReadFunc
-
-	// write points to a function where the CPU can write to RAM or Bus
-	write WriteFunc
+	// interface to address bus
+	bus addressbus.BusAddressingExternal
 
 	// definition of current operation
 	opDef operationDefinition
@@ -93,14 +87,26 @@ var (
 )
 
 // Init resets CPU values
-func Init(rf ReadFunc, wf WriteFunc) error {
+func Init(addressBus addressbus.BusAddressingExternal) {
 
-	read = rf
-	write = wf
+	bus = addressBus
 
 	Reset()
+}
 
-	return nil
+func read(addr uint16) byte {
+	b, err := bus.Read(addr)
+	if err != nil {
+		log.Panicf("could not read from memory: %v", err)
+	}
+	return b
+}
+
+func write(addr uint16, data byte) {
+	err := bus.Write(addr, data)
+	if err != nil {
+		log.Panicf("could not write to memory: %v", err)
+	}
 }
 
 func Reset() {
