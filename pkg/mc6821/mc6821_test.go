@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+const (
+	kbd   uint16 = 0xd010 // read key
+	kbdcr uint16 = 0xd011 // control port
+	dsp   uint16 = 0xd012 // write ascii
+	dspcr uint16 = 0xd013 // control port
+)
+
 func TestInputOutput(t *testing.T) {
 
 	// arrange
@@ -12,17 +19,11 @@ func TestInputOutput(t *testing.T) {
 		Name: "Testing",
 	}
 
-	keyboardInputChannelA := make(chan byte, 10)
-	pia.SetInputChannelA(keyboardInputChannelA)
-
 	screenOutputChannel := make(chan byte, 10)
 	pia.SetOutputChannelB(screenOutputChannel)
 
-	piaCA1Channel := make(chan Signal, 10)
-	pia.SetCA1Channel(piaCA1Channel)
-
 	// act
-	var expected byte = 0x40
+	var expected byte = 0x5A
 	var actual byte
 
 	go func() {
@@ -31,12 +32,11 @@ func TestInputOutput(t *testing.T) {
 		}
 	}()
 
-	go func() {
-		piaCA1Channel <- Fall                      // bring keyboard strobe to low to force active transition
-		keyboardInputChannelA <- (expected | 0x80) // bit 7 is constantly set (+5V)
-		piaCA1Channel <- Rise                      // send only pulse
-		piaCA1Channel <- Fall                      // 20 micro secs are not worth emulating
-	}()
+	pia.Write(dsp, 0x7F)   // 01111111 -> DDRB : configure all bits except highest bit for output
+	pia.Write(dspcr, 0x04) // 00000100 -> CRB  : write to output port B
+	pia.Write(dsp, expected)
+
+	close(screenOutputChannel)
 
 	time.Sleep(50 * time.Millisecond)
 

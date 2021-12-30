@@ -6,7 +6,7 @@ import (
 	"github.com/KaiWalter/go6502/pkg/memory"
 )
 
-func TestOnlyMemory(t *testing.T) {
+func TestOnlyRam(t *testing.T) {
 
 	const memSize = 0x200
 
