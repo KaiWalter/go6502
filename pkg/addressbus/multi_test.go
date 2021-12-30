@@ -6,7 +6,7 @@ import (
 	"github.com/KaiWalter/go6502/pkg/memory"
 )
 
-func TestGeneral(t *testing.T) {
+func TestOnlyMemory(t *testing.T) {
 
 	const memSize = 0x200
 
@@ -35,7 +35,7 @@ func TestGeneral(t *testing.T) {
 
 }
 
-func TestDecimal(t *testing.T) {
+func TestWithRom(t *testing.T) {
 
 	// arrange
 	bus := &MultiBus{}
