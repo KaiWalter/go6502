@@ -24,10 +24,11 @@ func Test_LDA_IMM_STA_ZP(t *testing.T) {
 	//   sta $0
 	ramContent := [0x10000]byte{0x00, 0xA9, testValue, 0x85, 0x00}
 	ram := memory.Memory{AddressOffset: 0, AddressSpace: ramContent[:]}
-	addressbus.InitBus(0x4000)
-	addressbus.RegisterComponent(0, len(ramContent)-1, &ram)
 
-	Init()
+	bus := addressbus.SimpleBus{}
+	bus.InitBus(&ram)
+
+	Init(&bus)
 	WaitForSystemResetCycles()
 	PC = 1
 
@@ -55,10 +56,11 @@ func Test_LDA_IMM_STA_ABS(t *testing.T) {
 	//   sta $0
 	ramContent := [0x10000]byte{0x00, 0xA9, testValue, 0x8D, 0x00, 0x00}
 	ram := memory.Memory{AddressOffset: 0, AddressSpace: ramContent[:]}
-	addressbus.InitBus(0x4000)
-	addressbus.RegisterComponent(0, len(ramContent)-1, &ram)
 
-	Init()
+	bus := addressbus.SimpleBus{}
+	bus.InitBus(&ram)
+
+	Init(&bus)
 	WaitForSystemResetCycles()
 	PC = 1
 
@@ -88,10 +90,11 @@ func Test_Dec_SBC(t *testing.T) {
 	// CMP $89
 	ramContent := [0x10000]byte{0x90, 0x00, 0x89, 0x18, 0xF8, 0xA5, 0x00, 0xE5, 0x01, 0xC5, 0x03}
 	ram := memory.Memory{AddressOffset: 0, AddressSpace: ramContent[:]}
-	addressbus.InitBus(0x4000)
-	addressbus.RegisterComponent(0, len(ramContent)-1, &ram)
 
-	Init()
+	bus := addressbus.SimpleBus{}
+	bus.InitBus(&ram)
+
+	Init(&bus)
 	WaitForSystemResetCycles()
 	PC = 3
 

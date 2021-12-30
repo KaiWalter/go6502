@@ -20,10 +20,10 @@ func TestFunctional(t *testing.T) {
 	}
 
 	ram := memory.Memory{AddressOffset: 0, AddressSpace: ramContent[:]}
-	addressbus.InitBus(0x4000)
-	addressbus.RegisterComponent(0, len(ramContent)-1, &ram)
+	bus := addressbus.SimpleBus{}
+	bus.InitBus(&ram)
 
-	Init()
+	Init(&bus)
 	WaitForSystemResetCycles()
 	PC = 0x400
 

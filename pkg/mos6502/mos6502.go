@@ -40,6 +40,9 @@ var operations = [...]operationDefinition{
 }
 
 var (
+	// interface to address bus
+	bus addressbus.BusAddressingExternal
+
 	// definition of current operation
 	opDef operationDefinition
 
@@ -84,13 +87,15 @@ var (
 )
 
 // Init resets CPU values
-func Init() {
+func Init(addressBus addressbus.BusAddressingExternal) {
+
+	bus = addressBus
 
 	Reset()
 }
 
 func read(addr uint16) byte {
-	b, err := addressbus.Read(addr)
+	b, err := bus.Read(addr)
 	if err != nil {
 		log.Panicf("could not read from memory: %v", err)
 	}
@@ -98,7 +103,7 @@ func read(addr uint16) byte {
 }
 
 func write(addr uint16, data byte) {
-	err := addressbus.Write(addr, data)
+	err := bus.Write(addr, data)
 	if err != nil {
 		log.Panicf("could not write to memory: %v", err)
 	}

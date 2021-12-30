@@ -32,6 +32,8 @@ var (
 	ram  = memory.Memory{AddressOffset: 0, AddressSpace: make([]byte, 4*1024)}
 	roms = []memory.Memory{}
 
+	bus = addressbus.MultiBus{}
+
 	pia = mc6821.MC6821{Name: "Apple1_PIA", StartAddress: 0xD010, EndAddress: 0xD01F}
 
 	screenOutputChannel   chan byte
@@ -43,8 +45,8 @@ func init() {
 
 	initKeyboardMapping()
 
-	addressbus.InitBus(addressMapBlockSize)
-	addressbus.RegisterComponent(0, ram.Size()/addressMapBlockSize, &ram)
+	bus.InitBus(addressMapBlockSize)
+	bus.RegisterComponent(0, ram.Size()/addressMapBlockSize, &ram)
 
 	// load ROMs
 	loadROM("./roms/Apple1_HexMonitor.rom", 0xFF00)
@@ -57,7 +59,7 @@ func Run() {
 	defer destroyScreen()
 
 	// wire up PIA with screen output and keyboard input
-	addressbus.RegisterComponent(int(pia.StartAddress), int(pia.EndAddress), &pia)
+	bus.RegisterComponent(int(pia.StartAddress), int(pia.EndAddress), &pia)
 	screenOutputChannel = make(chan byte, 10)
 	pia.SetOutputChannelB(screenOutputChannel)
 	go receiveOutput()
@@ -69,7 +71,7 @@ func Run() {
 	pia.SetCA1Channel(piaCA1Channel)
 
 	// init 6502
-	mos6502.Reset()
+	mos6502.Init(&bus)
 	waitForSystemResetCycles()
 
 	mainLoop()
@@ -123,7 +125,7 @@ func loadROM(filename string, addr uint16) {
 	}
 
 	rom := &memory.Memory{AddressOffset: addr, AddressSpace: romContent}
-	addressbus.RegisterComponent(int(addr), int(addr)+len(romContent)-1, rom)
+	bus.RegisterComponent(int(addr), int(addr)+len(romContent)-1, rom)
 
 	roms = append(roms, *rom)
 }
