@@ -19,3 +19,21 @@ This project is just for me to learn Go by solving a familar problem - 6502 emul
 ## installation
 
 - follow instructions for SDL2 on <https://github.com/veandco/go-sdl2#requirements>
+
+## performance test
+
+to compare with <https://github.com/KaiWalter/rust6502>
+
+```shell
+go build -ldflags "-s -w"
+go test ./pkg/mos6502/ -test.v
+```
+
+2022-01-07 on GitHub Codespaces 4 cores, 8 GB RAM, 32 GB storage:
+
+```
+=== RUN   TestDecimal
+--- PASS: TestDecimal (0.53s)
+=== RUN   TestFunctional
+--- PASS: TestFunctional (1.12s)
+```
